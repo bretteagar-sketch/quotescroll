@@ -13,8 +13,8 @@
             --text: #f0f0f8;
             --text-muted: #7070a0;
             --nav-h: 68px;
-            --top-h: 150px;
-            --learn-top-h: 110px;
+            --top-h: 130px;
+            --learn-top-h: 115px;
         }
 
         body {
@@ -471,89 +471,131 @@
             padding: 4px 0 0;
         }
 
+        /* ── LEARN CARDS — educational lesson style ── */
         .learn-card {
             background: var(--card-bg);
-            border-radius: 18px;
-            padding: 20px 18px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(255,255,255,0.07);
-            position: relative;
+            border-radius: 16px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
             overflow: hidden;
         }
 
-        .learn-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 4px;
-            height: 100%;
-            border-radius: 18px 0 0 18px;
+        /* Colored header band */
+        .learn-card-header {
+            padding: 12px 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
-        .lt-self-help::before    { background: #c084fc; }
-        .lt-philosophy::before   { background: #34d399; }
-        .lt-business::before     { background: #fbbf24; }
-        .lt-psychology::before   { background: #818cf8; }
-        .lt-spirituality::before { background: #f472b6; }
-        .lt-pool-chemistry::before { background: #22d3ee; }
-        .lt-pool-pumps::before   { background: #fb923c; }
-        .lt-pool-repair::before  { background: #f87171; }
-        .lt-accounting::before   { background: #4ade80; }
-
-        .learn-topic-badge {
+        .learn-lesson-label {
             font-size: 10px;
             font-weight: 800;
-            letter-spacing: 0.8px;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
-            margin-bottom: 8px;
-            display: inline-block;
+            opacity: 0.9;
         }
 
-        .lt-self-help    .learn-topic-badge { color: #c084fc; }
-        .lt-philosophy   .learn-topic-badge { color: #34d399; }
-        .lt-business     .learn-topic-badge { color: #fbbf24; }
-        .lt-psychology   .learn-topic-badge { color: #818cf8; }
-        .lt-spirituality .learn-topic-badge { color: #f472b6; }
-        .lt-pool-chemistry .learn-topic-badge { color: #22d3ee; }
-        .lt-pool-pumps   .learn-topic-badge { color: #fb923c; }
-        .lt-pool-repair  .learn-topic-badge { color: #f87171; }
-        .lt-accounting   .learn-topic-badge { color: #4ade80; }
+        .learn-num {
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0.55;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lt-self-help    .learn-card-header { background: rgba(192,132,252,0.12); }
+        .lt-philosophy   .learn-card-header { background: rgba(52,211,153,0.12); }
+        .lt-business     .learn-card-header { background: rgba(251,191,36,0.12); }
+        .lt-psychology   .learn-card-header { background: rgba(129,140,248,0.12); }
+        .lt-spirituality .learn-card-header { background: rgba(244,114,182,0.12); }
+        .lt-pool-chemistry .learn-card-header { background: rgba(34,211,238,0.12); }
+        .lt-pool-pumps   .learn-card-header { background: rgba(251,146,60,0.12); }
+        .lt-pool-repair  .learn-card-header { background: rgba(248,113,113,0.12); }
+        .lt-accounting   .learn-card-header { background: rgba(74,222,128,0.12); }
+
+        .lt-self-help    .learn-lesson-label { color: #c084fc; }
+        .lt-philosophy   .learn-lesson-label { color: #34d399; }
+        .lt-business     .learn-lesson-label { color: #fbbf24; }
+        .lt-psychology   .learn-lesson-label { color: #818cf8; }
+        .lt-spirituality .learn-lesson-label { color: #f472b6; }
+        .lt-pool-chemistry .learn-lesson-label { color: #22d3ee; }
+        .lt-pool-pumps   .learn-lesson-label { color: #fb923c; }
+        .lt-pool-repair  .learn-lesson-label { color: #f87171; }
+        .lt-accounting   .learn-lesson-label { color: #4ade80; }
+
+        /* Card body */
+        .learn-card-body {
+            padding: 16px 16px 0;
+        }
 
         .learn-title {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 800;
             color: var(--text);
-            margin-bottom: 8px;
-            line-height: 1.3;
-            letter-spacing: -0.2px;
+            margin-bottom: 10px;
+            line-height: 1.25;
+            letter-spacing: -0.3px;
+        }
+
+        .learn-section-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: block;
         }
 
         .learn-body {
             font-size: 14px;
-            line-height: 1.7;
-            color: rgba(240,240,248,0.8);
-            margin-bottom: 10px;
+            line-height: 1.75;
+            color: rgba(240,240,248,0.82);
+            margin-bottom: 14px;
+        }
+
+        /* Pro Tip box */
+        .learn-tip-wrap {
+            margin: 0 0 16px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .learn-tip-header {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            padding: 6px 12px;
         }
 
         .learn-tip {
             font-size: 13px;
-            line-height: 1.6;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
-            color: rgba(240,240,248,0.7);
-            border-left: 3px solid rgba(255,255,255,0.15);
+            line-height: 1.65;
+            padding: 10px 12px 12px;
+            color: rgba(240,240,248,0.82);
         }
 
-        .lt-self-help    .learn-tip { border-color: #c084fc; background: rgba(192,132,252,0.08); }
-        .lt-philosophy   .learn-tip { border-color: #34d399; background: rgba(52,211,153,0.08); }
-        .lt-business     .learn-tip { border-color: #fbbf24; background: rgba(251,191,36,0.08); }
-        .lt-psychology   .learn-tip { border-color: #818cf8; background: rgba(129,140,248,0.08); }
-        .lt-spirituality .learn-tip { border-color: #f472b6; background: rgba(244,114,182,0.08); }
-        .lt-pool-chemistry .learn-tip { border-color: #22d3ee; background: rgba(34,211,238,0.08); }
-        .lt-pool-pumps   .learn-tip { border-color: #fb923c; background: rgba(251,146,60,0.08); }
-        .lt-pool-repair  .learn-tip { border-color: #f87171; background: rgba(248,113,113,0.08); }
-        .lt-accounting   .learn-tip { border-color: #4ade80; background: rgba(74,222,128,0.08); }
+        .lt-self-help    .learn-tip-wrap { background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.2); }
+        .lt-philosophy   .learn-tip-wrap { background: rgba(52,211,153,0.08);  border: 1px solid rgba(52,211,153,0.2); }
+        .lt-business     .learn-tip-wrap { background: rgba(251,191,36,0.08);  border: 1px solid rgba(251,191,36,0.2); }
+        .lt-psychology   .learn-tip-wrap { background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.2); }
+        .lt-spirituality .learn-tip-wrap { background: rgba(244,114,182,0.08); border: 1px solid rgba(244,114,182,0.2); }
+        .lt-pool-chemistry .learn-tip-wrap { background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.2); }
+        .lt-pool-pumps   .learn-tip-wrap { background: rgba(251,146,60,0.08);  border: 1px solid rgba(251,146,60,0.2); }
+        .lt-pool-repair  .learn-tip-wrap { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); }
+        .lt-accounting   .learn-tip-wrap { background: rgba(74,222,128,0.08);  border: 1px solid rgba(74,222,128,0.2); }
+
+        .lt-self-help    .learn-tip-header { color: #c084fc; }
+        .lt-philosophy   .learn-tip-header { color: #34d399; }
+        .lt-business     .learn-tip-header { color: #fbbf24; }
+        .lt-psychology   .learn-tip-header { color: #818cf8; }
+        .lt-spirituality .learn-tip-header { color: #f472b6; }
+        .lt-pool-chemistry .learn-tip-header { color: #22d3ee; }
+        .lt-pool-pumps   .learn-tip-header { color: #fb923c; }
+        .lt-pool-repair  .learn-tip-header { color: #f87171; }
+        .lt-accounting   .learn-tip-header { color: #4ade80; }
     </style>
 </head>
 <body>
@@ -1175,7 +1217,17 @@ function goView(v) {
     document.getElementById('learn-topbar').classList.toggle('visible', v === 'learn');
     if (v === 'favorites') renderFavs();
     if (v === 'genres')    renderGenres();
-    if (v === 'learn')   { renderLearnFilter(); renderLearnCards(); }
+    if (v === 'learn') {
+        renderLearnFilter();
+        renderLearnCards();
+        requestAnimationFrame(() => {
+            const ltb = document.getElementById('learn-topbar');
+            if (ltb) {
+                const h = ltb.offsetHeight;
+                if (h > 0) document.documentElement.style.setProperty('--learn-top-h', (h + 6) + 'px');
+            }
+        });
+    }
 }
 
 // ─────────────────────────────────────────────
@@ -1420,13 +1472,24 @@ function renderLearnFilter() {
 
 function renderLearnCards() {
     const el = document.getElementById('learn-list');
+    const topic = LEARN_TOPICS.find(t => t.id === activeLearnTopic);
     const cards = LEARN.filter(c => c.t === activeLearnTopic);
-    el.innerHTML = cards.map(c => `
+    el.innerHTML = cards.map((c, i) => `
         <div class="learn-card lt-${c.t}">
-            <div class="learn-topic-badge">${LEARN_TOPICS.find(t=>t.id===c.t)?.ico} ${LEARN_TOPICS.find(t=>t.id===c.t)?.name}</div>
-            <div class="learn-title">${c.title}</div>
-            <div class="learn-body">${c.body}</div>
-            ${c.tip ? `<div class="learn-tip">${c.tip}</div>` : ''}
+            <div class="learn-card-header">
+                <span class="learn-lesson-label">${topic?.ico} ${topic?.name} &nbsp;·&nbsp; Lesson ${i + 1}</span>
+                <span class="learn-num">${i + 1} / ${cards.length}</span>
+            </div>
+            <div class="learn-card-body">
+                <div class="learn-title">${c.title}</div>
+                <span class="learn-section-label">Core Concept</span>
+                <div class="learn-body">${c.body}</div>
+                ${c.tip ? `
+                <div class="learn-tip-wrap">
+                    <div class="learn-tip-header">⚡ Pro Tip</div>
+                    <div class="learn-tip">${c.tip}</div>
+                </div>` : ''}
+            </div>
         </div>`
     ).join('');
     document.getElementById('v-learn').scrollTop = 0;
@@ -1441,10 +1504,24 @@ function setLearnTopic(id) {
 // ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
+function syncTopHeight() {
+    const tb = document.getElementById('topbar');
+    if (tb) {
+        const h = tb.offsetHeight;
+        if (h > 0) document.documentElement.style.setProperty('--top-h', (h + 6) + 'px');
+    }
+}
+
 renderChips();
 renderFeed();
 updateBadge();
 initInfiniteScroll();
+
+// Measure topbar after DOM paints
+requestAnimationFrame(() => {
+    syncTopHeight();
+    window.addEventListener('resize', syncTopHeight);
+});
 </script>
 </body>
 </html>
