@@ -373,6 +373,43 @@
         }
         .pop { animation: pop 0.35s ease forwards; }
 
+        /* ── QUOTE REVEAL ANIMATIONS ── */
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes wordIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.96); filter: blur(3px); }
+            to   { opacity: 1; transform: translateY(0)  scale(1);    filter: blur(0); }
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .q-card { opacity: 0; }
+        .q-card.revealed { animation: cardIn 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+        .qmark-wrap { display: block; opacity: 0; }
+        .q-card.revealed .qmark-wrap {
+            animation: fadeSlideIn 0.4s ease forwards;
+            animation-delay: 0.1s;
+        }
+
+        .word {
+            display: inline-block;
+            opacity: 0;
+            white-space: pre;
+        }
+        .q-card.revealed .word {
+            animation: wordIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
+        }
+
+        .card-foot { opacity: 0; }
+        .q-card.revealed .card-foot {
+            animation: fadeSlideIn 0.5s ease forwards;
+        }
+
         /* Fav badge on nav */
         .nav-badge {
             position: absolute;
@@ -876,6 +913,9 @@ function renderFeed() {
     feed.innerHTML = shuffledFeed.map(q => {
         const saved = favs.some(f => f.id === q.id);
         const long  = q.q.length > 160;
+        const words = (q.q + '"').split(' ').map((w, i) =>
+            `<span class="word" style="animation-delay:${0.2 + i * 0.045}s">${w} </span>`
+        ).join('');
         return `
         <div class="q-card g-${q.g}">
             <div class="card-top">
@@ -885,10 +925,10 @@ function renderFeed() {
                 </button>
             </div>
             <div class="card-body">
-                <span class="qmark">"</span>
-                <p class="qtext ${long ? 'sm' : ''}">${q.q}"</p>
+                <span class="qmark-wrap qmark">"</span>
+                <p class="qtext ${long ? 'sm' : ''}">${words}</p>
             </div>
-            <div class="card-foot">
+            <div class="card-foot" style="animation-delay:${0.2 + (q.q.split(' ').length * 0.045) + 0.15}s">
                 <div class="book-title">${q.book}</div>
                 <div class="book-author">— ${q.by}</div>
             </div>
@@ -896,6 +936,7 @@ function renderFeed() {
     }).join('');
 
     feed.scrollTop = 0;
+    setTimeout(initRevealObserver, 60);
 }
 
 // ─────────────────────────────────────────────
@@ -1032,6 +1073,26 @@ function updateBadge() {
         badge.style.display = 'none';
         ico.textContent = '♡';
     }
+}
+
+// ─────────────────────────────────────────────
+//  CARD REVEAL OBSERVER
+// ─────────────────────────────────────────────
+let revealObserver = null;
+
+function initRevealObserver() {
+    if (revealObserver) revealObserver.disconnect();
+    revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+                const card = entry.target;
+                card.classList.remove('revealed');
+                void card.offsetWidth;
+                card.classList.add('revealed');
+            }
+        });
+    }, { threshold: 0.6 });
+    document.querySelectorAll('#feed .q-card').forEach(card => revealObserver.observe(card));
 }
 
 // ─────────────────────────────────────────────
