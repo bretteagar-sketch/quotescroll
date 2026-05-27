@@ -427,6 +427,117 @@
             justify-content: center;
             padding: 0 4px;
         }
+
+        /* ── LEARN VIEW ── */
+        .learn-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg);
+            padding: 14px 14px 0;
+            margin: 0 -14px;
+        }
+
+        #learn-filter {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        #learn-filter::-webkit-scrollbar { display: none; }
+
+        #v-learn {
+            padding-top: 0;
+        }
+
+        #learn-list {
+            padding: 10px 0 0;
+        }
+
+        .learn-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 20px 18px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .learn-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 18px 0 0 18px;
+        }
+
+        .lt-self-help::before    { background: #c084fc; }
+        .lt-philosophy::before   { background: #34d399; }
+        .lt-business::before     { background: #fbbf24; }
+        .lt-psychology::before   { background: #818cf8; }
+        .lt-spirituality::before { background: #f472b6; }
+        .lt-pool-chemistry::before { background: #22d3ee; }
+        .lt-pool-pumps::before   { background: #fb923c; }
+        .lt-pool-repair::before  { background: #f87171; }
+        .lt-accounting::before   { background: #4ade80; }
+
+        .learn-topic-badge {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .lt-self-help    .learn-topic-badge { color: #c084fc; }
+        .lt-philosophy   .learn-topic-badge { color: #34d399; }
+        .lt-business     .learn-topic-badge { color: #fbbf24; }
+        .lt-psychology   .learn-topic-badge { color: #818cf8; }
+        .lt-spirituality .learn-topic-badge { color: #f472b6; }
+        .lt-pool-chemistry .learn-topic-badge { color: #22d3ee; }
+        .lt-pool-pumps   .learn-topic-badge { color: #fb923c; }
+        .lt-pool-repair  .learn-topic-badge { color: #f87171; }
+        .lt-accounting   .learn-topic-badge { color: #4ade80; }
+
+        .learn-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 8px;
+            line-height: 1.3;
+            letter-spacing: -0.2px;
+        }
+
+        .learn-body {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(240,240,248,0.8);
+            margin-bottom: 10px;
+        }
+
+        .learn-tip {
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: rgba(240,240,248,0.7);
+            border-left: 3px solid rgba(255,255,255,0.15);
+        }
+
+        .lt-self-help    .learn-tip { border-color: #c084fc; background: rgba(192,132,252,0.08); }
+        .lt-philosophy   .learn-tip { border-color: #34d399; background: rgba(52,211,153,0.08); }
+        .lt-business     .learn-tip { border-color: #fbbf24; background: rgba(251,191,36,0.08); }
+        .lt-psychology   .learn-tip { border-color: #818cf8; background: rgba(129,140,248,0.08); }
+        .lt-spirituality .learn-tip { border-color: #f472b6; background: rgba(244,114,182,0.08); }
+        .lt-pool-chemistry .learn-tip { border-color: #22d3ee; background: rgba(34,211,238,0.08); }
+        .lt-pool-pumps   .learn-tip { border-color: #fb923c; background: rgba(251,146,60,0.08); }
+        .lt-pool-repair  .learn-tip { border-color: #f87171; background: rgba(248,113,113,0.08); }
+        .lt-accounting   .learn-tip { border-color: #4ade80; background: rgba(74,222,128,0.08); }
     </style>
 </head>
 <body>
@@ -454,6 +565,15 @@
     <div id="fav-list"></div>
 </div>
 
+<!-- VIEW: LEARN -->
+<div id="v-learn" class="view">
+    <div class="learn-topbar">
+        <div class="view-head" style="margin-bottom:10px">Learn</div>
+        <div id="learn-filter"></div>
+    </div>
+    <div id="learn-list"></div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav id="nav">
     <button class="nav-item on" data-v="feed" onclick="goView('feed')">
@@ -463,6 +583,10 @@
     <button class="nav-item" data-v="genres" onclick="goView('genres')">
         <span class="nav-ico">◉</span>
         <span>Genres</span>
+    </button>
+    <button class="nav-item" data-v="learn" onclick="goView('learn')">
+        <span class="nav-ico">🎓</span>
+        <span>Learn</span>
     </button>
     <button class="nav-item" data-v="favorites" onclick="goView('favorites')" style="position:relative">
         <span class="nav-ico" id="fav-ico">♡</span>
@@ -1032,6 +1156,7 @@ function goView(v) {
     document.getElementById('topbar').style.display = v === 'feed' ? '' : 'none';
     if (v === 'favorites') renderFavs();
     if (v === 'genres')    renderGenres();
+    if (v === 'learn')   { renderLearnFilter(); renderLearnCards(); }
 }
 
 // ─────────────────────────────────────────────
@@ -1150,6 +1275,148 @@ function initInfiniteScroll() {
         const index  = Math.round(feed.scrollTop / cardH);
         if (index >= cards.length - 4) appendMoreCards();
     }, { passive: true });
+}
+
+// ─────────────────────────────────────────────
+//  LEARN DATA
+// ─────────────────────────────────────────────
+const LEARN_TOPICS = [
+  {id:'pool-chemistry', name:'Pool Chemistry',   ico:'🧪', color:'#22d3ee'},
+  {id:'pool-pumps',     name:'Pumps & Filters',  ico:'⚙️',  color:'#fb923c'},
+  {id:'pool-repair',    name:'Pool Repair',      ico:'🔧', color:'#f87171'},
+  {id:'accounting',     name:'Accounting',       ico:'📊', color:'#4ade80'},
+  {id:'business',       name:'Business',         ico:'💡', color:'#fbbf24'},
+  {id:'self-help',      name:'Self-Help',        ico:'⚡', color:'#c084fc'},
+  {id:'philosophy',     name:'Philosophy',       ico:'🧭', color:'#34d399'},
+  {id:'psychology',     name:'Psychology',       ico:'🧠', color:'#818cf8'},
+  {id:'spirituality',   name:'Spirituality',     ico:'✨', color:'#f472b6'},
+];
+
+const LEARN = [
+  // ── POOL CHEMISTRY ───────────────────────────────────────────────
+  {id:1, t:'pool-chemistry', title:'The pH Sweet Spot', body:`pH is the most important number in pool care. It measures how acidic or basic your water is on a scale of 0–14. The ideal range is 7.2–7.8. Below 7.2, water turns acidic — it burns swimmers' eyes, corrodes metal equipment, and eats away at plaster. Above 7.8, chlorine loses up to 80% of its effectiveness and calcium scale begins building on surfaces.`, tip:`💡 Low pH → add soda ash (sodium carbonate). High pH → add muriatic acid or dry acid (sodium bisulfate).`},
+  {id:2, t:'pool-chemistry', title:'Free Chlorine — Your Main Sanitizer', body:`Free chlorine (FC) is the active, available chlorine that kills bacteria, viruses, and algae. The ideal range is 1–3 ppm for a traditional chlorine pool. FC is constantly consumed by sunlight, swimmer load, and organic matter. Without a stabilizer (CYA), outdoor pools can lose 90% of their FC within 2 hours of direct sunlight.`, tip:`💡 Test FC daily or every visit. Always add chlorine in the evening to prevent UV burnoff.`},
+  {id:3, t:'pool-chemistry', title:'Total Alkalinity — The pH Buffer', body:`Total Alkalinity (TA) acts as a buffer that resists sudden pH swings. The ideal range is 80–120 ppm. Low TA causes pH to bounce wildly — called "pH bounce." High TA makes it very difficult to lower pH and can cause cloudy water and scale. Always balance TA before adjusting pH, since TA directly influences pH stability.`, tip:`💡 Low TA → add sodium bicarbonate (baking soda). High TA → add muriatic acid and aerate to off-gas CO2.`},
+  {id:4, t:'pool-chemistry', title:'Calcium Hardness — Protect Your Surfaces', body:`Calcium Hardness (CH) measures the amount of dissolved calcium in the water. Ideal range is 200–400 ppm. Water with low calcium is "hungry" — it will pull calcium out of plaster, grout, and equipment, causing etching and pitting. Water with too much calcium forms white crusty scale on surfaces, tiles, and inside equipment. Vinyl and fiberglass pools can tolerate lower CH (150–250 ppm).`, tip:`💡 Low CH → add calcium chloride. High CH → partially drain and refill with fresh water.`},
+  {id:5, t:'pool-chemistry', title:'Cyanuric Acid — Sunscreen for Chlorine', body:`Cyanuric Acid (CYA), also called stabilizer or conditioner, protects chlorine from being destroyed by UV sunlight. Without CYA, an outdoor pool loses most of its chlorine within hours. The ideal range is 30–50 ppm. However, too much CYA (above 80 ppm) "locks" the chlorine, making it ineffective even at high FC readings — this is called chlorine lock.`, tip:`💡 High CYA is only fixed by draining and refilling. Never over-stabilize. Trichlor and dichlor tablets add CYA with every dose.`},
+  {id:6, t:'pool-chemistry', title:'Shocking the Pool', body:`Shocking means adding a large dose of chlorine (or non-chlorine shock) to break down combined chlorine (chloramines) and restore water clarity. You should shock when combined chlorine exceeds 0.5 ppm, after heavy rain or high bather load, when water turns cloudy or green, or weekly as maintenance. The target is 10× the combined chlorine reading (called "breakpoint chlorination").`, tip:`💡 Always shock at dusk or night. Use cal-hypo or liquid chlorine for standard shocking. Run the pump for at least 8 hours after.`},
+  {id:7, t:'pool-chemistry', title:'Combined Chlorine — The Problem Indicator', body:`Combined chlorine (CC) is chlorine that has already bonded with ammonia and nitrogen from sweat, urine, and organic matter — forming chloramines. Chloramines are what cause that strong "pool smell" and red eyes — not free chlorine. Ideal CC is 0 ppm; anything above 0.5 ppm means you need to shock. A "chlorine smell" at a pool is actually a sign the water is under-chlorinated, not over.`, tip:`💡 CC = Total Chlorine − Free Chlorine. Use a proper test kit (not just strips) for accurate readings.`},
+  {id:8, t:'pool-chemistry', title:'The Phosphate Problem', body:`Phosphates are nutrients — primarily from lawn fertilizers, leaves, and body care products — that feed algae growth. They don't affect chlorine directly but create an environment where algae thrive even with proper chlorine levels. High phosphates (above 500 ppb) force you to use more chlorine to maintain sanitation. Phosphate removers (lanthanum-based) precipitate phosphates out of solution so they can be filtered out.`, tip:`💡 Phosphate levels above 1,000 ppb are a red flag. Remove organics and debris promptly to reduce phosphate load.`},
+  {id:9, t:'pool-chemistry', title:'Salt Chlorine Generators', body:`A salt chlorinator (SWG) converts dissolved salt (sodium chloride) into chlorine through electrolysis, then converts it back to salt — creating a continuous chlorine cycle. Salt pools still use chlorine; they just generate it on-site. Ideal salt level is 2,700–3,400 ppm. SWG pools still require pH, TA, and CH balancing. The cell (electrode plates) needs cleaning every 3 months and replacement every 3–5 years.`, tip:`💡 Salt pools tend to run higher pH — check and adjust weekly. Low salt or dirty cells = poor chlorine output.`},
+  {id:10, t:'pool-chemistry', title:'The Langelier Saturation Index', body:`The LSI (Langelier Saturation Index) combines pH, temperature, calcium hardness, total alkalinity, and TDS into a single number that tells you if your water is balanced. An LSI of -0.3 to +0.3 is ideal. Negative LSI = corrosive water that eats plaster and metal. Positive LSI = scaling water that deposits calcium. Keeping the LSI in balance extends the life of your pool surface and equipment significantly.`, tip:`💡 Use an LSI calculator app (like Orenda) for quick field calculations. Temperature matters more than most techs realize.`},
+  {id:11, t:'pool-chemistry', title:'Testing Frequency & Methods', body:`Residential pools should be tested 2–3 times per week in summer, weekly in off-season. Commercial pools require daily or twice-daily testing. Test strips give a quick overview but are less accurate. A good DPD drop test kit (Taylor K-2006) is the industry standard for accurate FC, CC, pH, TA, CH, and CYA readings. Always test before adding chemicals, and test again 30 minutes after adding to confirm.`, tip:`💡 Keep a log of your readings and chemical additions. Patterns reveal recurring problems before they become emergencies.`},
+  {id:12, t:'pool-chemistry', title:'Total Dissolved Solids (TDS)', body:`TDS measures all dissolved substances in the water — minerals, chemicals, and byproducts. As water evaporates, TDS concentrates. When TDS climbs above 2,000–3,000 ppm above the source water baseline, water becomes dull, hard to balance, and chemical-resistant. The only true fix is dilution — partial draining and refilling with fresh water. High TDS is common in arid climates where evaporation is heavy.`, tip:`💡 Consistent top-off with fresh water and avoiding over-use of chemicals keeps TDS manageable longer.`},
+
+  // ── PUMPS & FILTERS ──────────────────────────────────────────────
+  {id:13, t:'pool-pumps', title:'How a Pool Pump Works', body:`A pool pump is a centrifugal pump — the motor spins an impeller at high speed, creating suction that draws water from the pool through the skimmer and main drain, then pushes it through the filter and back into the pool via the returns. The pump is the heart of the circulation system. Without proper flow, chemicals can't distribute evenly and the filter can't remove debris.`, tip:`💡 The pump basket catches large debris before it can damage the impeller. Check and empty it every service visit.`},
+  {id:14, t:'pool-pumps', title:'Priming the Pump', body:`A pump must be full of water (primed) to function — it cannot move air. If air enters the system (from a low water level, loose lid, or cracked line), the pump loses prime and runs dry, generating heat that destroys the seal and melts the impeller housing. Signs of lost prime: pump is noisy/rattling, weak or no return flow, air bubbles in returns, pump basket is empty of water.`, tip:`💡 To prime: fill pump basket with water, ensure all lids are tight, open air relief valve on filter, then start pump. Repeat if needed.`},
+  {id:15, t:'pool-pumps', title:'Turnover Rate — How Long to Run', body:`The turnover rate is how long it takes to circulate the entire pool volume through the filter once. Best practice is 1–2 turnovers per day (2 is ideal). To calculate: Pool gallons ÷ pump flow rate (GPH) = hours per turnover. An average 15,000-gallon pool with a 60 GPM pump turns over in about 4 hours. Run the pump at least 8 hours per day in summer, 6 in cooler months.`, tip:`💡 Variable speed pumps allow you to run longer at lower speeds — moving the same total water volume while using far less energy.`},
+  {id:16, t:'pool-pumps', title:'Variable Speed Pumps (VSP)', body:`Variable speed pumps use a permanent magnet motor (like a Tesla) that can run at any RPM, unlike single-speed motors that run at full blast all the time. Running at lower speeds uses dramatically less electricity — a 3/4 HP equivalent at 1,800 RPM uses about 90% less energy than a 2 HP single-speed at 3,450 RPM. VSPs pay for themselves in 1–2 years and are now code-required in most states.`, tip:`💡 Program low speed (1,500–1,800 RPM) for daily filtration and high speed (2,700–3,450 RPM) for vacuuming, heating, or water features.`},
+  {id:17, t:'pool-pumps', title:'Cavitation — The Silent Pump Killer', body:`Cavitation happens when a pump tries to move more water than is available — creating vapor bubbles that implode violently inside the impeller, causing vibration, noise, and physical damage. Common causes: clogged impeller, blocked suction line, low water level, or a pump too large for the plumbing. You'll hear a rattling or grinding sound from a cavitating pump. Long-term cavitation destroys impellers and wears out seals.`, tip:`💡 If a pump is noisy and returns are weak despite prime, suspect cavitation or a clogged impeller. Check suction side restrictions first.`},
+  {id:18, t:'pool-pumps', title:'Sand Filter Operation', body:`Sand filters use #20 silica sand (or glass media) to trap particles as water passes through. They're the most common filter type — low maintenance and durable. Effective at filtering particles down to 20–40 microns. The filter needs backwashing (reversing flow to flush trapped debris to waste) when pressure rises 8–10 psi above clean starting pressure. Sand should be replaced every 5–7 years as it rounds off and loses filtering ability.`, tip:`💡 Never backwash more than 2 minutes — you waste water and can leave the filter under-loaded. Rinse after every backwash.`},
+  {id:19, t:'pool-pumps', title:'Cartridge Filter Operation', body:`Cartridge filters use pleated polyester fabric to trap particles down to 10–15 microns — finer than sand. They don't backwash; instead the cartridge is removed and hosed off (top to bottom, never a pressure washer) every 1–3 months. An annual acid bath (muriatic acid solution) removes calcium scale and oils that hosing can't remove. Cartridges typically last 2–5 years. Never run without a cartridge — it damages the filter tank.`, tip:`💡 Always check O-rings when reassembling. A bad O-ring causes pressure loss and air intrusion.`},
+  {id:20, t:'pool-pumps', title:'DE Filter Operation', body:`Diatomaceous Earth (DE) filters are the most precise — filtering down to 2–5 microns, near the level of a microscope. DE powder coats internal grids; water passes through the powder which traps particles. After backwashing, fresh DE must be added through the skimmer (1 lb per 10 sq ft of grid area, typically). DE grids need annual inspection and cleaning. Torn grids return white DE powder to the pool.`, tip:`💡 DE powder is a lung irritant — wear a mask when handling it. Never discharge DE to a storm drain; it's illegal in many areas.`},
+  {id:21, t:'pool-pumps', title:'Reading Your Filter Pressure Gauge', body:`The pressure gauge tells you how hard the pump is working to push water through the filter. Record the "clean" starting pressure when the filter is freshly cleaned — this is your baseline. When pressure rises 8–10 psi above baseline, it's time to clean the filter. Low pressure (below baseline) often means a suction-side problem — air leak, clogged basket, closed valve, or lost prime. A stuck gauge reads the same every visit — replace it.`, tip:`💡 Check the gauge every service visit. It's one of the fastest diagnostics you have for the entire circulation system.`},
+  {id:22, t:'pool-pumps', title:'Understanding the Multi-Port Valve', body:`Sand and DE filters use a multi-port valve with 6 positions: Filter (normal operation), Backwash (reverses flow to clean media), Rinse (settles media after backwash — always run 15 sec), Recirculate (bypasses filter, circulates water only), Waste (sends water directly to drain, bypassing filter — use for vacuuming algae or lowering water level), and Closed (shuts off flow to filter).`, tip:`💡 ALWAYS shut the pump off before turning the multi-port valve handle. Turning it under pressure cracks the spider gasket.`},
+
+  // ── POOL REPAIR ──────────────────────────────────────────────────
+  {id:23, t:'pool-repair', title:'Diagnosing Cloudy Water', body:`Cloudy water has four main causes: low or ineffective chlorine (most common), poor filtration/circulation, pH or alkalinity imbalance, or high calcium/TDS. Work through them in order. Test water chemistry first — fix FC, pH, and TA. If chemistry is balanced, check filter pressure and run time. If filter is clean and running long enough, suspect calcium or TDS and consider partial drain.`, tip:`💡 Cloudy water after shocking usually clears in 24–48 hours with continuous filtration. Use a clarifier or flocculant to speed up particle removal.`},
+  {id:24, t:'pool-repair', title:'Green Water — Algae Treatment Protocol', body:`Green water means active algae bloom. Step 1: Test and adjust pH to 7.2 (low end helps chlorine work better). Step 2: Brush all surfaces aggressively — break the algae's protective film. Step 3: Triple-shock (30 ppm FC target) using cal-hypo or liquid chlorine. Step 4: Run filter 24/7. Step 5: Backwash or clean filter every 8–12 hours as it loads up. Step 6: Vacuum dead algae to waste. Step 7: Test and balance.`, tip:`💡 Don't add algaecide before shocking — the low chlorine environment lets algaecide break down. Add it after FC is established.`},
+  {id:25, t:'pool-repair', title:'Mustard Algae — The Stubborn One', body:`Mustard (yellow) algae clings to walls, steps, and corners and brushes off easily — only to return within hours. It's chlorine-resistant and hides in equipment, hoses, brushes, and even swimwear. Treatment: super-shock to 30+ ppm FC, aggressively brush all surfaces and returns, clean all equipment that touched the water (vac heads, poles, brushes), and wash any swimwear worn in that pool. Repeat if it returns.`, tip:`💡 Mustard algae thrives in pools with high CYA. If CYA is above 80 ppm, consider a partial drain as part of treatment.`},
+  {id:26, t:'pool-repair', title:'Air Bubbles in Return Jets', body:`Air bubbles coming out of the return jets indicate air is entering the suction side of the system. Common causes: water level too low (skimmer sucking air), loose or cracked pump lid O-ring, cracked pump lid, loose union fittings on suction lines, clogged or damaged skimmer weir door, or a crack in the suction plumbing underground. Air in the system reduces pump efficiency and, if severe, causes loss of prime.`, tip:`💡 Apply Magic Lube or petroleum jelly to all O-rings at every service. Dry O-rings crack and let air in.`},
+  {id:27, t:'pool-repair', title:'Pump Won\'t Prime', body:`If a pump won't hold prime: Check water level (must be at mid-skimmer). Check pump lid is tight and O-ring is lubricated and uncracked. Check all valves are fully open on suction side. Check pump basket for debris blockage. Check for air leaks on suction plumbing (drip soapy water on fittings while running — bubbles reveal leaks). If pump basket fills but then empties when pump runs, you likely have an underground suction leak.`, tip:`💡 A pump that loses prime repeatedly usually has an O-ring or suction-side air leak. Don't ignore it — a dry-running pump burns out within minutes.`},
+  {id:28, t:'pool-repair', title:'Pool Leak Detection Basics', body:`Pools naturally lose 1/4" to 1/2" of water per day to evaporation. The bucket test distinguishes evaporation from a leak: fill a bucket to pool level, place it on a step, mark both levels, and wait 24 hours. If the pool drops more than the bucket, you have a leak. Common leak locations: around fittings and returns, the skimmer throat (cracked collars), light niches, the main drain, and the pump/filter equipment pad plumbing.`, tip:`💡 Dye testing (use red food dye or dye tabs near suspected areas with pump off) shows water movement toward a leak.`},
+  {id:29, t:'pool-repair', title:'Pool Stains — Metal vs Organic', body:`Not all stains are equal. Metal stains (iron = reddish-brown, copper = blue-green, manganese = purple-black) come from fill water, corroded equipment, or algaecides with copper. Organic stains (brown/tan) come from leaves, berries, or worms. Test: place a vitamin C tablet on a metal stain — if it lightens instantly, it's a metal stain. Organic stains respond to chlorine. Metal stains require a sequestrant or ascorbic acid treatment.`, tip:`💡 Never shock a pool with known high metal content — it oxidizes metals and stains immediately. Add a metal sequestrant first.`},
+  {id:30, t:'pool-repair', title:'Worn or Cracked O-Rings', body:`O-rings create watertight seals throughout the pool system — pump lid, filter tank, valves, unions, and chlorinators. When O-rings dry out, crack, or get pinched, they cause air leaks (on suction side) or water leaks (on pressure side). Inspect every O-ring at every service visit. Apply a silicone-based lubricant (Magic Lube or Teflon-based) — never petroleum-based products which degrade rubber over time.`, tip:`💡 Carry a full O-ring kit in your service truck. A $0.50 O-ring fix on-site prevents a call-back and a broken pump seal.`},
+  {id:31, t:'pool-repair', title:'Clogged or Broken Impeller', body:`The impeller is the spinning component inside the pump that creates water movement. Hair, string, leaves, and small debris can get past the basket and wrap around or clog the impeller. Signs: pump runs but has very low or no flow, pump is louder than usual, pump basket is full but pressure is low. To clear: turn off power, open pump, reach into the volute housing and manually clear the obstruction.`, tip:`💡 Always turn off the breaker before reaching into a pump — not just the timer. Capacitors in the motor can hold a charge.`},
+  {id:32, t:'pool-repair', title:'High Filter Pressure — Causes & Fixes', body:`High filter pressure (more than 10 psi above baseline) means the filter is dirty and needs cleaning. But if pressure stays high after cleaning, look deeper: channeling in sand (water bypasses media through a path), calcified filter media that no longer flows freely, a partially closed return valve, or a pump that's oversized for the plumbing. In DE filters, a torn grid allows DE to bypass and cake at the bottom.`, tip:`💡 If cleaning the filter doesn't bring pressure back to baseline, inspect the media itself. Sand lasts 5–7 years; DE grids last 7–10 years.`},
+  {id:33, t:'pool-repair', title:'Low Pressure / Weak Flow', body:`Weak return flow with low pressure usually points to a suction-side restriction. Systematic check: Is the pump basket full of debris? Is the skimmer basket clogged? Is the main drain valve open? Is the water level at mid-skimmer? Is the pump impeller clogged? Is there an air leak reducing suction? Is the pump lid O-ring allowing air in? Work from the pool inward — skimmer → basket → suction plumbing → pump.`, tip:`💡 Compare pump basket fullness to normal. A basket that fills unusually fast means suction is working but something upstream is breaking down debris.`},
+
+  // ── ACCOUNTING ───────────────────────────────────────────────────
+  {id:34, t:'accounting', title:'Profit First — Pay Yourself First', body:`The Profit First method flips traditional accounting: instead of Sales − Expenses = Profit, you operate as Sales − Profit = Expenses. Every deposit is immediately split across multiple bank accounts: Profit, Owner's Pay, Tax, and Operating Expenses. This forces the business to live within the remaining operating budget, building profit by design rather than hoping for leftovers at year end.`, tip:`💡 Start with small allocations (1–5% to Profit) and increase every quarter. The constraint forces creative cost reduction.`},
+  {id:35, t:'accounting', title:'Separate Your Accounts', body:`Every business should have at minimum: a Business Checking account (operating expenses), a Business Savings account (taxes), and a personal account kept completely separate. Mixing personal and business finances — called commingling — destroys your financial clarity, creates tax nightmares, and can pierce your LLC protection in a lawsuit. Open a dedicated business account from day one and never use it for personal expenses.`, tip:`💡 For Profit First, the ideal setup is 5 accounts: Income, Profit, Owner's Pay, Tax, and Operating Expenses.`},
+  {id:36, t:'accounting', title:'Revenue vs. Profit', body:`Revenue (also called sales or gross income) is the total money coming in before any expenses. Profit is what remains after all expenses are paid. A business can have high revenue and negative profit — many "successful-looking" businesses are actually losing money. What you take home is profit, not revenue. Focus on profit margin (profit ÷ revenue × 100) as your real performance measure, not just top-line revenue growth.`, tip:`💡 A service business with $200K revenue and 15% net margin earns $30K profit. The goal is to grow the margin, not just the top line.`},
+  {id:37, t:'accounting', title:'Understanding Gross Profit Margin', body:`Gross Profit Margin = (Revenue − Cost of Goods Sold) ÷ Revenue × 100. For a service business, COGS includes direct costs tied to delivering the service: chemicals, fuel, labor (if employees), equipment wear. Gross margin tells you how efficiently you deliver your service. A pool route should target 60–70%+ gross margin. If it's lower, your direct service costs are too high relative to your pricing.`, tip:`💡 Track gross margin per route or per client to find which accounts are actually profitable and which are costing you money.`},
+  {id:38, t:'accounting', title:'The Break-Even Point', body:`Your break-even point is the minimum revenue needed to cover all expenses — the point where profit is exactly zero. Calculate it: Total Fixed Expenses ÷ Gross Margin % = Break-Even Revenue. Knowing your break-even tells you exactly how many pool accounts (at your average monthly rate) you need to cover all your costs. Every dollar of revenue above break-even is potential profit.`, tip:`💡 If your fixed costs are $3,000/month and gross margin is 60%, you need $5,000/month in revenue just to break even.`},
+  {id:39, t:'accounting', title:'Fixed vs. Variable Expenses', body:`Fixed expenses stay the same regardless of revenue: rent, insurance, phone, software subscriptions, loan payments. Variable expenses scale with your work: chemicals, fuel, equipment parts, subcontractor labor. Understanding the split matters because fixed costs are your floor — they exist whether you service 10 pools or 100. Scaling your business becomes profitable when variable costs grow slower than revenue.`, tip:`💡 List every expense and label it Fixed or Variable. Most service business owners underestimate their fixed cost base.`},
+  {id:40, t:'accounting', title:'Quarterly Estimated Tax Payments', body:`As a self-employed business owner, the IRS requires you to pay taxes quarterly (April 15, June 15, September 15, January 15) rather than once at year end. Failing to pay quarterly results in underpayment penalties. A safe rule: set aside 25–30% of every deposit into your Tax account immediately. Pay the IRS quarterly using IRS Direct Pay or vouchers from Form 1040-ES.`, tip:`💡 The easiest safe harbor: pay 100% of last year's tax liability in 4 equal quarterly payments and you'll owe no penalties.`},
+  {id:41, t:'accounting', title:'Tax Deductions for Service Businesses', body:`Common deductible expenses for a pool service business: vehicle mileage (67 cents/mile in 2024) or actual vehicle expenses, chemicals and supplies, equipment and tools, phone (business use %), home office (if exclusive use), insurance premiums, licensing fees, continuing education, bank fees, and software/apps. Keep receipts for everything. The IRS requires documentation for any deduction — "I spent it" isn't enough.`, tip:`💡 Track mileage with an app (MileIQ, Everlance) from day one. Vehicle deductions are typically the largest single deduction for route businesses.`},
+  {id:42, t:'accounting', title:'Accounts Receivable — Get Paid on Time', body:`Accounts receivable (AR) is money owed to you by customers. For a service business, slow AR kills cash flow even when revenue looks healthy. Best practices: invoice same day as service, set clear net-30 (or net-15) payment terms, send automatic reminders at 7 and 14 days past due, and charge a late fee (1.5–2%) on overdue balances. Monthly auto-pay or credit card on file eliminates AR problems entirely.`, tip:`💡 Transitioning clients to autopay is the single best cash flow improvement for a pool route. Aim for 80%+ of clients on auto-pay.`},
+  {id:43, t:'accounting', title:'Tracking Job Profitability', body:`Not all clients are equally profitable. A client who pays $150/month but requires $60 in chemicals and extra visits nets you far less than a $120/month client with $15 in chemicals and no callbacks. Track cost per account: chemicals used, drive time, extra service calls, and equipment wear. Clients with poor margins should be repriced or released — freeing capacity for better accounts.`, tip:`💡 A simple spreadsheet with revenue minus direct costs per client reveals your most and least profitable accounts quickly.`},
+  {id:44, t:'accounting', title:'Cash Flow vs. Profit', body:`A business can be profitable on paper but run out of cash. This happens when money is owed to you (AR) but not yet collected, or when you've paid for expenses (like bulk chemicals) before collecting the revenue they generate. Cash flow is the timing of actual money in vs. out. Review your bank balance weekly, not just your P&L. Profit is an accounting concept; cash is what pays your bills.`, tip:`💡 Build a cash reserve equal to 2–3 months of fixed expenses. This buffer protects you through slow seasons or unexpected costs.`},
+  {id:45, t:'accounting', title:'The Income Statement (P&L)', body:`The Profit & Loss statement (P&L) summarizes all revenue and expenses over a period (monthly, quarterly, yearly). Structure: Revenue − COGS = Gross Profit. Gross Profit − Operating Expenses = Net Profit (or Loss). Review your P&L every month. It shows whether your business is actually profitable, which expense categories are growing, and whether your margins are holding as you scale.`, tip:`💡 Compare your P&L month-over-month and year-over-year. Trends matter more than any single month's numbers.`},
+
+  // ── BUSINESS ─────────────────────────────────────────────────────
+  {id:46, t:'business', title:'The 80/20 Rule (Pareto Principle)', body:`In most businesses, 80% of revenue comes from 20% of clients, and 80% of problems come from 20% of clients — often a different 20%. Identify your top 20% of clients by revenue and profitability and give them extra attention. Identify your bottom 20% who drain time with complaints, slow payment, or special requests and consider releasing them. More clients isn't always better — better clients is better.`, tip:`💡 Rank your clients by net profit (revenue minus your actual cost per account). The bottom 10% are probably costing you money in time and stress.`},
+  {id:47, t:'business', title:'Systematize Before You Scale', body:`Before adding more clients, employees, or services, document exactly how you do what you do. Create checklists, routes, scripts, and processes for every repeatable task. Systems allow other people to deliver your standard of service. Without systems, scaling just multiplies chaos. The goal is to build a business that runs without you — which starts with making your knowledge explicit and transferable.`, tip:`💡 Start with your most common task (weekly service visit) and write every step as if training a brand-new employee who knows nothing.`},
+  {id:48, t:'business', title:'Price on Value, Not Time', body:`Pricing by the hour rewards working slower. Pricing by the job or by the outcome rewards efficiency and expertise. Clients don't care how long you take — they care that their pool is clean, safe, and hassle-free. As you get faster and more skilled, hourly pricing penalizes you. Move to flat monthly rates or project-based pricing that captures the full value you deliver, not just the clock time.`, tip:`💡 Calculate your effective hourly rate (total revenue ÷ total hours worked). Raise prices on accounts where that rate is below your target.`},
+  {id:49, t:'business', title:'The Referral Flywheel', body:`The cheapest and highest-quality lead source for a service business is a referral from a happy existing client. Referral clients close faster, pay better, and stay longer because they came in with trust already established. Build a referral system: ask every satisfied client for referrals, consider a referral reward (one free service month), and make it easy with a direct link or simple ask. One referral system can replace all paid advertising.`, tip:`💡 The best time to ask for a referral is immediately after solving a problem or delivering exceptional service — when satisfaction is highest.`},
+  {id:50, t:'business', title:'Recurring Revenue — The Service Business Superpower', body:`Monthly recurring revenue (MRR) is the most valuable business model for a service company. Unlike one-time jobs, recurring clients give you predictable cash flow, lower marketing costs, and compounding account value. A pool route with 50 clients at $150/month generates $7,500 MRR regardless of how many new leads you get that month. Build your business around recurring contracts, not one-off work.`, tip:`💡 Calculate your MRR and set a monthly growth target ($500/month, for example). Small consistent gains compound dramatically over a year.`},
+  {id:51, t:'business', title:'Know Your Numbers Weekly', body:`Most business owners only look at their finances at tax time — by then it's too late to respond to problems. Review weekly: bank balance, revenue this week vs. last week, outstanding invoices over 30 days, new clients added and lost, and top expenses. A 15-minute weekly financial review gives you early warning on cash flow problems, pricing gaps, and growth opportunities before they become crises.`, tip:`💡 Set a recurring calendar block every Friday or Monday for your weekly numbers review. Make it a non-negotiable habit.`},
+  {id:52, t:'business', title:'Build Before You Burn Out', body:`Most solo service business owners hit a ceiling — not because there's no more demand, but because they run out of time and energy. The only way past it is to hire, delegate, or systematize. Hire your first helper for the tasks you least like or that require the least skill. Use the freed time to sell more, improve systems, or rest. You are the most valuable asset in your business — protect your energy.`, tip:`💡 Track your hours for two weeks. The tasks you dread and could teach someone else in a day are your first hires.`},
+
+  // ── SELF-HELP ────────────────────────────────────────────────────
+  {id:53, t:'self-help', title:'Identity-Based Habits', body:`The most lasting behavior change comes from shifting your identity, not just your goals. Instead of "I want to work out more," think "I am someone who exercises." Every action you take is a vote for the type of person you believe yourself to be. Small wins cast votes for your new identity — and those votes compound. You don't need to be perfect, you need to be consistent enough that the identity feels true.`, tip:`💡 Ask yourself: What would a disciplined person do right now? Then do that. You're not just doing the action — you're becoming the person.`},
+  {id:54, t:'self-help', title:'The 1% Rule — Compounding Improvement', body:`Improving 1% per day compounds to 37× better over a year. Declining 1% per day compounds to near zero. The difference between a good career and a great one is rarely one dramatic moment — it's tiny, consistent improvements that compound over time. This is true for skills, relationships, fitness, finances, and habits. The question isn't "How do I get 10× better?" but "What's the 1% improvement I can make today?"`, tip:`💡 Identify one specific area to improve 1% this week. Write it down. Vague intentions don't compound — specific practices do.`},
+  {id:55, t:'self-help', title:'Environment Design', body:`Your behavior is a product of your environment more than your willpower. If you want to read more, put a book on your pillow. If you want to eat better, remove junk food from the house. If you want to work out, sleep in your gym clothes. Designing your physical space to make good behaviors easier — and bad behaviors harder — is more reliable than motivation. Willpower is finite; good design is automatic.`, tip:`💡 Do a 10-minute environment audit: What in your space makes good habits harder? Remove one obstacle today.`},
+  {id:56, t:'self-help', title:'The 2-Minute Rule', body:`If a task takes less than 2 minutes, do it immediately — don't schedule it, don't defer it. This prevents the mental overhead of tracking small tasks and eliminates the buildup of small undone things that drain energy. Extended version: when starting a new habit, make the first action take less than 2 minutes (read one page, do one push-up, write one sentence). The goal is to show up — the rest follows.`, tip:`💡 The 2-minute start is powerful for overcoming resistance. "I'll just open the document" often becomes a full work session.`},
+  {id:57, t:'self-help', title:'Energy Management Over Time Management', body:`You can't manage time — everyone gets 24 hours. What you can manage is your energy. High-quality focused work done in 90 minutes of peak energy is worth more than 4 hours of distracted, exhausted effort. Identify when your energy is highest (most people: 2–4 hours after waking) and protect that time for your most important work. Schedule low-energy tasks (admin, email, calls) for your low-energy windows.`, tip:`💡 Track your energy for 3 days. Rate it hourly 1–10. Your peak window is your most valuable resource — guard it fiercely.`},
+  {id:58, t:'self-help', title:'The Weekly Review', body:`Once a week — same day, same time — review your week and plan the next. Check: What did I accomplish? What's incomplete? What's coming next week? What one thing would make next week a success? The weekly review is the highest-leverage habit for maintaining clarity and direction. Without it, days fill with urgent but unimportant tasks while your real goals drift.`, tip:`💡 Sunday evenings or Friday afternoons work well. Block 30 minutes in your calendar and treat it as an unmissable appointment with yourself.`},
+  {id:59, t:'self-help', title:'Deliberate Practice', body:`Regular practice doesn't make you better — deliberate practice does. Deliberate practice means working at the edge of your current ability, with focused attention, immediate feedback, and intentional correction of errors. A pool tech who has serviced 1,000 pools but never diagnosed a new problem isn't 1,000 reps better — just more comfortable doing the same thing. Seek difficulty, feedback, and discomfort to actually improve.`, tip:`💡 After each job or task, ask: What could I have done better? What didn't I know? What will I research tonight? That loop is deliberate practice.`},
+
+  // ── PHILOSOPHY ───────────────────────────────────────────────────
+  {id:60, t:'philosophy', title:'The Dichotomy of Control', body:`Stoic philosophy's most powerful idea: divide everything into two categories — what is in your control (your thoughts, judgments, efforts, responses) and what is not (other people, the weather, outcomes, the economy). Pour your energy into the first category and practice acceptance of the second. Most anxiety comes from trying to control the uncontrollable. Peace comes from focusing relentlessly on your response.`, tip:`💡 When stressed, ask: Is this in my control? If yes, act. If no, practice acceptance. This single question ends most unnecessary suffering.`},
+  {id:61, t:'philosophy', title:'Memento Mori — Remember You Will Die', body:`Marcus Aurelius and the Stoics practiced memento mori — regularly reminding themselves of their mortality — not to create despair, but to create urgency and gratitude. When you remember you have a finite number of days, trivial complaints lose their power and meaningful action becomes urgent. Death is not morbid; it's the context that makes life vivid. The question it asks: Are you living in a way you won't regret?`, tip:`💡 Ask yourself weekly: If I had one year left, would I spend it the way I'm spending this week? Let the answer guide your priorities.`},
+  {id:62, t:'philosophy', title:'Amor Fati — Love Your Fate', body:`Amor Fati (Latin: "love of fate") is the Stoic and Nietzschean practice of not just accepting what happens, but actively loving it — including hardship, failure, and loss. It doesn't mean pretending things are fine; it means seeing difficulty as the material from which character and strength are forged. Every obstacle either defeats you or builds you — the difference is your relationship to it.`, tip:`💡 When something goes wrong, practice saying: "This is exactly what I needed." Then ask what it's teaching you.`},
+  {id:63, t:'philosophy', title:'The Examined Life', body:`Socrates said "The unexamined life is not worth living." This isn't about self-criticism — it's about self-awareness. Regularly reflecting on your values, your choices, your direction, and the gap between who you are and who you want to be is what separates intentional living from drifting. Most people are on autopilot — reacting to circumstances rather than creating them. Examination is how you take the wheel.`, tip:`💡 Journal for 5 minutes each morning: What do I value most? Am I living by it? What one thing today would make me proud of myself?`},
+  {id:64, t:'philosophy', title:'Negative Visualization', body:`Stoics practiced negative visualization — vividly imagining the loss of what you value most: your health, your family, your business, your freedom. Not to be pessimistic, but to generate gratitude for what you have now and to mentally prepare for adversity. What you take for granted you stop appreciating. Regular negative visualization makes ordinary moments feel like gifts.`, tip:`💡 Spend 5 minutes imagining your life without your top 3 blessings. Then go be with them or work on them with full presence.`},
+  {id:65, t:'philosophy', title:'First Principles Thinking', body:`First principles thinking means breaking a problem down to its most fundamental truths — stripping away assumptions, analogies, and conventional wisdom — and rebuilding your understanding from the ground up. Elon Musk used this to rethink rocket costs. Instead of "rockets cost $65M because they always have," he asked "What do the raw materials actually cost?" The answer was $2M. Question everything you accept as fixed.`, tip:`💡 For any problem, ask: What do I actually know to be true here? What am I assuming? What if the assumption is wrong?`},
+
+  // ── PSYCHOLOGY ───────────────────────────────────────────────────
+  {id:66, t:'psychology', title:'Cognitive Distortions — The Mind\'s Traps', body:`Cognitive distortions are habitual patterns of inaccurate thinking that create negative emotions. Common ones: All-or-nothing thinking ("If I'm not perfect, I'm a failure"), Catastrophizing ("This one setback will ruin everything"), Mind reading ("They must think I'm incompetent"), Overgeneralization ("This always happens to me"). Simply naming a distortion when you notice it weakens its power significantly.`, tip:`💡 When you feel anxious or down, write the thought causing it. Then ask: Is this thought 100% true? What's a more accurate version?`},
+  {id:67, t:'psychology', title:'The Window of Tolerance', body:`The window of tolerance is the zone of arousal where you can function effectively — not too overwhelmed (hyperarousal: anxiety, panic, rage) and not too shut down (hypoarousal: numbness, depression, disconnection). Trauma, stress, and fatigue shrink the window. Sleep, safety, exercise, and mindfulness widen it. Knowing your window helps you recognize when you're outside it — and have strategies to return.`, tip:`💡 Signs you're outside your window: you can't think clearly, you're reacting not responding, or you feel numb. Step away, breathe, move your body.`},
+  {id:68, t:'psychology', title:'The Growth Mindset vs Fixed Mindset', body:`Carol Dweck's research shows people hold one of two core beliefs about ability. Fixed mindset: talent is innate and fixed — failure means you're not good enough. Growth mindset: abilities develop through effort and learning — failure is information. Fixed mindset people avoid challenges to protect their ego. Growth mindset people seek challenges because they value growth over appearance. Your mindset is itself a learnable mindset.`, tip:`💡 Replace "I'm not good at this" with "I'm not good at this yet." That one word changes the entire relationship to difficulty.`},
+  {id:69, t:'psychology', title:'Emotional Labeling', body:`Research by Matthew Lieberman shows that simply naming an emotion — "I'm feeling anxious" or "I notice frustration" — reduces the intensity of that emotion by activating the prefrontal cortex and dampening the amygdala. This is why journaling, therapy, and honest conversations with trusted people reduce emotional distress. Suppressing or ignoring emotions amplifies them. Naming them moves them.`, tip:`💡 Practice: when a strong emotion arises, pause and say "I notice I'm feeling ___." Don't fix it yet — just name it first.`},
+  {id:70, t:'psychology', title:'The Habit Loop', body:`Every habit is built on a three-part loop: Cue (trigger that initiates the behavior) → Routine (the behavior itself) → Reward (the benefit that reinforces it). To build a new habit, attach it to an existing cue and make the reward immediate. To break a bad habit, identify the cue and interrupt it, or change the routine while keeping the cue and reward. You cannot eliminate habits — you can only replace routines.`, tip:`💡 Choose a new habit you want to build. Write: After [existing cue], I will [new routine], and I'll reward myself with [reward].`},
+
+  // ── SPIRITUALITY ─────────────────────────────────────────────────
+  {id:71, t:'spirituality', title:'The Practice of Presence', body:`Most suffering exists in time — regret lives in the past, anxiety lives in the future. The present moment is the only place where life actually happens and where you have any real power. Presence is a practice, not a state. It means repeatedly returning your attention to what is actually here, now — your breath, your hands, the person in front of you, the task you're doing. Each return is the practice.`, tip:`💡 Set one anchor during your workday — washing your hands, starting the truck, or beginning a new pool — to take one full conscious breath and arrive.`},
+  {id:72, t:'spirituality', title:'The Observer Self', body:`Beneath all your thoughts, emotions, and stories is an awareness that watches all of it — the observer self. This part of you is not angry; it notices anger. It is not afraid; it notices fear. Learning to identify with the observer rather than the content of your mind creates a space between stimulus and response. You are not your thoughts. You are the one who knows the thoughts are happening.`, tip:`💡 Practice: Close your eyes and ask "Who is aware of my thoughts right now?" The one asking is not the thought — it's the observer. Rest there for 60 seconds.`},
+  {id:73, t:'spirituality', title:'Gratitude as a Practice', body:`Gratitude isn't a feeling that shows up when life is good — it's a practice that can be cultivated regardless of circumstances. Research consistently shows that people who regularly write down 3 specific things they're grateful for experience measurable increases in wellbeing, sleep quality, and positive emotion. The key is specificity and novelty — generic gratitude habituates quickly. "I'm grateful the pump started on the first try today" beats "I'm grateful for my health."`, tip:`💡 Each night write 3 specific things that went well today and why. Do this for 21 consecutive days and notice the shift.`},
+  {id:74, t:'spirituality', title:'Service as Meaning', body:`Many spiritual traditions converge on one insight: lasting fulfillment comes not from getting but from giving — from contributing to something beyond your own comfort and security. Work done as service — genuinely trying to make a customer's life better, doing the job right even when no one's watching — has a different quality than work done purely for payment. Both get paid; only one builds character and meaning.`, tip:`💡 Before each job, set an intention: "I'm going to leave this pool and this customer better than I found them." Notice how it changes the quality of your attention.`},
+  {id:75, t:'spirituality', title:'Impermanence — The Teacher', body:`Everything changes. The pool that was perfectly balanced last week is out of balance today. The client who loved you leaves. The equipment that worked fails. The season ends. Impermanence is not a problem — it's the fundamental nature of reality. Fighting it causes suffering; accepting it creates adaptability and presence. Buddhist philosophy teaches that clinging to permanence in an impermanent world is the root of suffering.`, tip:`💡 When something ends or changes — a client, a relationship, a good streak — practice saying "This too is part of it." Not resignation; acceptance.`},
+];
+
+// ─────────────────────────────────────────────
+//  LEARN STATE & RENDER
+// ─────────────────────────────────────────────
+let activeLearnTopic = 'pool-chemistry';
+
+function renderLearnFilter() {
+    const el = document.getElementById('learn-filter');
+    el.innerHTML = LEARN_TOPICS.map(t =>
+        `<button class="chip ${t.id === activeLearnTopic ? 'active' : ''}" onclick="setLearnTopic('${t.id}')">${t.ico} ${t.name}</button>`
+    ).join('');
+}
+
+function renderLearnCards() {
+    const el = document.getElementById('learn-list');
+    const cards = LEARN.filter(c => c.t === activeLearnTopic);
+    el.innerHTML = cards.map(c => `
+        <div class="learn-card lt-${c.t}">
+            <div class="learn-topic-badge">${LEARN_TOPICS.find(t=>t.id===c.t)?.ico} ${LEARN_TOPICS.find(t=>t.id===c.t)?.name}</div>
+            <div class="learn-title">${c.title}</div>
+            <div class="learn-body">${c.body}</div>
+            ${c.tip ? `<div class="learn-tip">${c.tip}</div>` : ''}
+        </div>`
+    ).join('');
+    document.getElementById('v-learn').scrollTop = 0;
+}
+
+function setLearnTopic(id) {
+    activeLearnTopic = id;
+    renderLearnFilter();
+    renderLearnCards();
 }
 
 // ─────────────────────────────────────────────
