@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 -->
+<!-- v4 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,8 +14,6 @@
             --text: #f0f0f8;
             --text-muted: #7070a0;
             --nav-h: 68px;
-            --top-h: 95px;
-            --learn-top-h: 95px;
         }
 
         body {
@@ -28,13 +26,12 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── TOP BAR ── */
+        /* ── TOP BAR (lives inside #v-feed flex column) ── */
         #topbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 100;
-            padding: 14px 16px 0;
-            background: linear-gradient(to bottom, rgba(8,8,16,1) 70%, transparent);
+            flex-shrink: 0;
+            padding: 12px 16px 6px;
+            background: var(--bg);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
         #app-title {
@@ -79,12 +76,10 @@
 
         /* ── FEED ── */
         #feed {
-            height: 100vh;
-            height: 100dvh;
+            flex: 1;
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scrollbar-width: none;
-            padding-top: var(--top-h);
             padding-bottom: var(--nav-h);
         }
         #feed::-webkit-scrollbar { display: none; }
@@ -92,9 +87,8 @@
         /* ── QUOTE CARD ── */
         .q-card {
             scroll-snap-align: start;
-            height: calc(100vh - var(--top-h) - var(--nav-h));
-            height: calc(100dvh - var(--top-h) - var(--nav-h));
-            min-height: 380px;
+            height: var(--feed-h, 500px);
+            min-height: 300px;
             margin: 0 12px 10px;
             border-radius: 22px;
             padding: 22px 22px 20px;
@@ -252,11 +246,17 @@
         .nav-ico { font-size: 20px; line-height: 1; }
 
         /* ── VIEWS ── */
-        .view { display: none; height: 100vh; height: 100dvh; overflow-y: auto; padding: 72px 14px var(--nav-h); }
+        .view { display: none; height: 100dvh; overflow-y: auto; padding: 72px 14px var(--nav-h); }
         .view.on { display: block; }
 
-        #v-feed { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+        /* Feed and Learn use flex column — topbar in flow, no pixel guessing */
+        #v-feed, #v-learn {
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+        }
         #v-feed.on { display: flex; }
+        #v-learn.on { display: flex; }
 
         .view-head {
             font-size: 26px;
@@ -435,14 +435,11 @@
 
         /* ── LEARN VIEW ── */
         #learn-topbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 100;
-            padding: 14px 16px 0;
-            background: linear-gradient(to bottom, rgba(8,8,16,1) 70%, transparent);
-            display: none;
+            flex-shrink: 0;
+            padding: 12px 16px 6px;
+            background: var(--bg);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-        #learn-topbar.visible { display: block; }
 
         #learn-topbar-title {
             font-size: 24px;
@@ -459,17 +456,16 @@
             display: flex;
             gap: 7px;
             overflow-x: auto;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
             scrollbar-width: none;
         }
         #learn-filter::-webkit-scrollbar { display: none; }
 
-        #v-learn {
-            padding-top: var(--learn-top-h);
-        }
-
-        #learn-list {
-            padding: 4px 0 0;
+        #learn-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 14px var(--nav-h);
+            -webkit-overflow-scrolling: touch;
         }
 
         /* ── LEARN CARDS — educational lesson style ── */
@@ -601,14 +597,12 @@
 </head>
 <body>
 
-<!-- TOP BAR (feed only) -->
-<div id="topbar">
-    <div id="app-title">QuoteScroll</div>
-    <div id="genre-filter"></div>
-</div>
-
-<!-- VIEW: FEED -->
+<!-- VIEW: FEED (topbar lives here in the flex column) -->
 <div id="v-feed" class="view on">
+    <div id="topbar">
+        <div id="app-title">QuoteScroll</div>
+        <div id="genre-filter"></div>
+    </div>
     <div id="feed"></div>
 </div>
 
@@ -624,15 +618,15 @@
     <div id="fav-list"></div>
 </div>
 
-<!-- LEARN TOP BAR (fixed, shown when on learn tab) -->
-<div id="learn-topbar">
-    <div id="learn-topbar-title">Learn</div>
-    <div id="learn-filter"></div>
-</div>
-
-<!-- VIEW: LEARN -->
+<!-- VIEW: LEARN (topbar lives here in the flex column) -->
 <div id="v-learn" class="view">
-    <div id="learn-list"></div>
+    <div id="learn-topbar">
+        <div id="learn-topbar-title">Learn</div>
+        <div id="learn-filter"></div>
+    </div>
+    <div id="learn-scroll">
+        <div id="learn-list"></div>
+    </div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1214,21 +1208,9 @@ function goView(v) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('on'));
     document.getElementById(`v-${v}`).classList.add('on');
     document.querySelector(`[data-v="${v}"]`).classList.add('on');
-    document.getElementById('topbar').style.display = v === 'feed' ? '' : 'none';
-    document.getElementById('learn-topbar').classList.toggle('visible', v === 'learn');
     if (v === 'favorites') renderFavs();
     if (v === 'genres')    renderGenres();
-    if (v === 'learn') {
-        renderLearnFilter();
-        renderLearnCards();
-        requestAnimationFrame(() => {
-            const ltb = document.getElementById('learn-topbar');
-            if (ltb) {
-                const h = ltb.offsetHeight;
-                if (h > 0) document.documentElement.style.setProperty('--learn-top-h', (h + 6) + 'px');
-            }
-        });
-    }
+    if (v === 'learn')   { renderLearnFilter(); renderLearnCards(); }
 }
 
 // ─────────────────────────────────────────────
@@ -1505,23 +1487,21 @@ function setLearnTopic(id) {
 // ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
-function syncTopHeight() {
+function setFeedHeight() {
+    // Topbar is in normal flow inside #v-feed — offsetHeight is always accurate
     const tb = document.getElementById('topbar');
-    if (tb) {
-        const h = tb.offsetHeight;
-        if (h > 0) document.documentElement.style.setProperty('--top-h', (h + 6) + 'px');
-    }
+    const h = tb ? tb.offsetHeight : 80;
+    const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 68;
+    document.documentElement.style.setProperty('--feed-h', `calc(100dvh - ${h}px - ${navH}px)`);
 }
 
 renderChips();
+// Cards are sized to fill the remaining space after topbar — measure once now
+setFeedHeight();
 renderFeed();
 updateBadge();
 initInfiniteScroll();
-
-// Measure topbar after fonts/layout settle — rAF is too early on mobile
-setTimeout(syncTopHeight, 0);
-setTimeout(syncTopHeight, 200);
-window.addEventListener('resize', syncTopHeight);
+window.addEventListener('resize', setFeedHeight);
 </script>
 </body>
 </html>
