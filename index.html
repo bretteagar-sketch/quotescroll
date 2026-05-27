@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuoteScroll</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #080810;
+            --card-bg: #10101c;
+            --text: #f0f0f8;
+            --text-muted: #7070a0;
+            --nav-h: 68px;
+            --top-h: 108px;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── TOP BAR ── */
+        #topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 14px 16px 0;
+            background: linear-gradient(to bottom, rgba(8,8,16,1) 70%, transparent);
+        }
+
+        #app-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #c084fc, #818cf8, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        #genre-filter {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        #genre-filter::-webkit-scrollbar { display: none; }
+
+        .chip {
+            flex-shrink: 0;
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+        .chip.active {
+            border-color: currentColor;
+            background: rgba(192,132,252,0.15);
+            color: #c084fc;
+        }
+
+        /* ── FEED ── */
+        #feed {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            padding-top: var(--top-h);
+            padding-bottom: var(--nav-h);
+        }
+        #feed::-webkit-scrollbar { display: none; }
+
+        /* ── QUOTE CARD ── */
+        .q-card {
+            scroll-snap-align: start;
+            height: calc(100vh - var(--top-h) - var(--nav-h));
+            min-height: 380px;
+            margin: 0 12px 10px;
+            border-radius: 22px;
+            padding: 22px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07);
+            transition: transform 0.1s;
+        }
+
+        /* Subtle glow overlay per genre */
+        .q-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 22px;
+            pointer-events: none;
+            opacity: 0.07;
+        }
+
+        /* Genre themes */
+        .g-self-help   { background: linear-gradient(160deg,#130d2a,#0c102a); }
+        .g-self-help::after { background: linear-gradient(135deg,#c084fc,#6366f1); }
+        .g-self-help .gbadge { background: rgba(192,132,252,.18); color: #c084fc; }
+
+        .g-philosophy  { background: linear-gradient(160deg,#0b1e18,#091520); }
+        .g-philosophy::after { background: linear-gradient(135deg,#34d399,#059669); }
+        .g-philosophy .gbadge { background: rgba(52,211,153,.18); color: #34d399; }
+
+        .g-business    { background: linear-gradient(160deg,#1c1504,#190f00); }
+        .g-business::after { background: linear-gradient(135deg,#fbbf24,#f59e0b); }
+        .g-business .gbadge { background: rgba(251,191,36,.18); color: #fbbf24; }
+
+        .g-psychology  { background: linear-gradient(160deg,#0c1230,#110c30); }
+        .g-psychology::after { background: linear-gradient(135deg,#818cf8,#6366f1); }
+        .g-psychology .gbadge { background: rgba(129,140,248,.18); color: #818cf8; }
+
+        .g-spirituality { background: linear-gradient(160deg,#1e0c24,#180c1e); }
+        .g-spirituality::after { background: linear-gradient(135deg,#f472b6,#ec4899); }
+        .g-spirituality .gbadge { background: rgba(244,114,182,.18); color: #f472b6; }
+
+
+        /* Card sections */
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .gbadge {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 5px 10px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .heart-btn {
+            width: 38px; height: 38px;
+            border: none;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.15s;
+            position: relative;
+            z-index: 2;
+        }
+        .heart-btn.on { background: rgba(239,68,68,0.2); }
+        .heart-btn:active { transform: scale(0.85); }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 16px 0 12px;
+        }
+
+        .qmark {
+            font-family: Georgia, serif;
+            font-size: 56px;
+            line-height: 0.6;
+            opacity: 0.15;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .qtext {
+            font-size: 19px;
+            line-height: 1.65;
+            font-weight: 500;
+            color: rgba(240,240,248,0.95);
+        }
+        .qtext.sm { font-size: 16px; }
+
+        .card-foot {
+            border-top: 1px solid rgba(255,255,255,0.07);
+            padding-top: 14px;
+        }
+
+        .book-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .book-author {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ── BOTTOM NAV ── */
+        #nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: rgba(8,8,16,0.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            transition: color 0.2s;
+            padding-bottom: 4px;
+        }
+        .nav-item.on { color: #c084fc; }
+
+        .nav-ico { font-size: 20px; line-height: 1; }
+
+        /* ── VIEWS ── */
+        .view { display: none; height: 100vh; overflow-y: auto; padding: 72px 14px var(--nav-h); }
+        .view.on { display: block; }
+
+        #v-feed { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+        #v-feed.on { display: flex; }
+
+        .view-head {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg,#c084fc,#818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Genres grid */
+        .genre-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .genre-tile {
+            border-radius: 18px;
+            padding: 18px 16px 14px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.07);
+            transition: transform 0.15s, opacity 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .genre-tile::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        .genre-tile:active { transform: scale(0.96); opacity: 0.8; }
+
+        .tile-ico { font-size: 26px; margin-bottom: 8px; }
+        .tile-name { font-size: 14px; font-weight: 800; }
+        .tile-count { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Favorites */
+        .fav-item {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .fav-q {
+            font-size: 14px;
+            line-height: 1.65;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .fav-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fav-meta { font-size: 12px; color: var(--text-muted); }
+        .fav-meta strong { color: rgba(240,240,248,0.8); font-size: 12px; }
+
+        .fav-del {
+            border: none;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            border-radius: 8px;
+            width: 28px; height: 28px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s, color 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fav-del:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 70px 20px 40px;
+            color: var(--text-muted);
+        }
+        .empty-ico { font-size: 44px; margin-bottom: 14px; }
+        .empty p { font-size: 15px; line-height: 1.6; }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: calc(var(--nav-h) + 14px);
+            left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: rgba(192,132,252,0.95);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 22px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(192,132,252,0.35);
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Heart pop animation */
+        @keyframes pop {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.45); }
+            70%  { transform: scale(0.9); }
+            100% { transform: scale(1.1); }
+        }
+        .pop { animation: pop 0.35s ease forwards; }
+
+        /* Fav badge on nav */
+        .nav-badge {
+            position: absolute;
+            top: 8px;
+            right: calc(50% - 18px);
+            background: #c084fc;
+            color: white;
+            font-size: 9px;
+            font-weight: 800;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP BAR (feed only) -->
+<div id="topbar">
+    <div id="app-title">QuoteScroll</div>
+    <div id="genre-filter"></div>
+</div>
+
+<!-- VIEW: FEED -->
+<div id="v-feed" class="view on">
+    <div id="feed"></div>
+</div>
+
+<!-- VIEW: GENRES -->
+<div id="v-genres" class="view">
+    <div class="view-head">Explore Genres</div>
+    <div class="genre-grid" id="genre-grid"></div>
+</div>
+
+<!-- VIEW: FAVORITES -->
+<div id="v-favorites" class="view">
+    <div class="view-head">Saved Quotes</div>
+    <div id="fav-list"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="nav">
+    <button class="nav-item on" data-v="feed" onclick="goView('feed')">
+        <span class="nav-ico">✦</span>
+        <span>Feed</span>
+    </button>
+    <button class="nav-item" data-v="genres" onclick="goView('genres')">
+        <span class="nav-ico">◉</span>
+        <span>Genres</span>
+    </button>
+    <button class="nav-item" data-v="favorites" onclick="goView('favorites')" style="position:relative">
+        <span class="nav-ico" id="fav-ico">♡</span>
+        <span>Saved</span>
+        <span class="nav-badge" id="fav-badge" style="display:none"></span>
+    </button>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const QUOTES = [
+
+  // ── SELF-HELP ──────────────────────────────────────────────────────
+  {id:1,   g:'self-help', q:`You do not rise to the level of your goals. You fall to the level of your systems.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:2,   g:'self-help', q:`Every action you take is a vote for the type of person you wish to become.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:3,   g:'self-help', q:`Habits are the compound interest of self-improvement. The effects of your habits multiply as you repeat them.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:4,   g:'self-help', q:`The most effective form of learning is practice, not planning.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:5,   g:'self-help', q:`Getting 1% better every day counts for a lot in the long run.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:6,   g:'self-help', q:`You don't have to be the victim of your environment. You can also be the architect of it.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:7,   g:'self-help', q:`The greatest threat to success is not failure but boredom.`, book:`Atomic Habits`, by:`James Clear`},
+  {id:8,   g:'self-help', q:`Realize deeply that the present moment is all you ever have. Make the Now the primary focus of your life.`, book:`The Power of Now`, by:`Eckhart Tolle`},
+  {id:9,   g:'self-help', q:`The primary cause of unhappiness is never the situation but your thoughts about it.`, book:`The Power of Now`, by:`Eckhart Tolle`},
+  {id:10,  g:'self-help', q:`Wherever you are, be there totally.`, book:`The Power of Now`, by:`Eckhart Tolle`},
+  {id:11,  g:'self-help', q:`Most people do not listen with the intent to understand; they listen with the intent to reply.`, book:`The 7 Habits of Highly Effective People`, by:`Stephen R. Covey`},
+  {id:12,  g:'self-help', q:`Begin with the end in mind.`, book:`The 7 Habits of Highly Effective People`, by:`Stephen R. Covey`},
+  {id:13,  g:'self-help', q:`We are not our feelings. We are not our moods. We are not even our thoughts.`, book:`The 7 Habits of Highly Effective People`, by:`Stephen R. Covey`},
+  {id:14,  g:'self-help', q:`Treat a man as he is and he will remain as he is. Treat a man as he can and should be and he will become as he can and should be.`, book:`The 7 Habits of Highly Effective People`, by:`Stephen R. Covey`},
+  {id:15,  g:'self-help', q:`No one is coming to save you. This life is 100% your responsibility.`, book:`Can't Hurt Me`, by:`David Goggins`},
+  {id:16,  g:'self-help', q:`We all have the ability to come from nothing and become something. Don't make excuses. Just get it done.`, book:`Can't Hurt Me`, by:`David Goggins`},
+  {id:17,  g:'self-help', q:`The most dangerous person on earth is the one who has turned their pain into purpose.`, book:`Can't Hurt Me`, by:`David Goggins`},
+  {id:18,  g:'self-help', q:`You are in danger of living a life so comfortable and soft that you will die without ever realizing your true potential.`, book:`Can't Hurt Me`, by:`David Goggins`},
+  {id:19,  g:'self-help', q:`In a growth mindset, challenges are exciting rather than threatening.`, book:`Mindset`, by:`Carol S. Dweck`},
+  {id:20,  g:'self-help', q:`The passion for stretching yourself and sticking to it, even when it's not going well, is the hallmark of the growth mindset.`, book:`Mindset`, by:`Carol S. Dweck`},
+  {id:21,  g:'self-help', q:`Becoming is better than being.`, book:`Mindset`, by:`Carol S. Dweck`},
+  {id:22,  g:'self-help', q:`The professional loves her work. She is invested in it wholeheartedly. But she does not forget that the work is not her.`, book:`The War of Art`, by:`Steven Pressfield`},
+  {id:23,  g:'self-help', q:`Resistance is experienced as fear; the degree of fear equates to the strength of the Resistance.`, book:`The War of Art`, by:`Steven Pressfield`},
+  {id:24,  g:'self-help', q:`Are you a writer who doesn't write, a painter who doesn't paint, an entrepreneur who never starts a venture? Then you know what Resistance is.`, book:`The War of Art`, by:`Steven Pressfield`},
+  {id:25,  g:'self-help', q:`The more scared we are of a work or calling, the more sure we can be that we have to do it.`, book:`The War of Art`, by:`Steven Pressfield`},
+  {id:26,  g:'self-help', q:`Subtract your age from 80. That's roughly how many years you have left. The question is: what will you do with them?`, book:`The Subtle Art of Not Giving a F*ck`, by:`Mark Manson`},
+  {id:27,  g:'self-help', q:`The desire for more positive experience is itself a negative experience. And, paradoxically, the acceptance of one's negative experience is itself a positive experience.`, book:`The Subtle Art of Not Giving a F*ck`, by:`Mark Manson`},
+  {id:28,  g:'self-help', q:`Not giving a f*ck does not mean being indifferent; it means being comfortable with being different.`, book:`The Subtle Art of Not Giving a F*ck`, by:`Mark Manson`},
+  {id:29,  g:'self-help', q:`Who you are is defined by what you're willing to struggle for.`, book:`The Subtle Art of Not Giving a F*ck`, by:`Mark Manson`},
+  {id:30,  g:'self-help', q:`You are a badass. Don't let anyone, including yourself, convince you otherwise.`, book:`You Are a Badass`, by:`Jen Sincero`},
+  {id:31,  g:'self-help', q:`If you want to live a life you've never lived, you have to do things you've never done.`, book:`You Are a Badass`, by:`Jen Sincero`},
+  {id:32,  g:'self-help', q:`Deep work is the ability to focus without distraction on a cognitively demanding task.`, book:`Deep Work`, by:`Cal Newport`},
+  {id:33,  g:'self-help', q:`Human beings, it seems, are at their best when immersed deeply in something challenging.`, book:`Deep Work`, by:`Cal Newport`},
+  {id:34,  g:'self-help', q:`What we choose to focus on and what we choose to ignore plays in defining the quality of our life.`, book:`Deep Work`, by:`Cal Newport`},
+  {id:35,  g:'self-help', q:`The disciplined pursuit of less is the path to the extraordinary.`, book:`Essentialism`, by:`Greg McKeown`},
+  {id:36,  g:'self-help', q:`If you don't prioritize your life, someone else will.`, book:`Essentialism`, by:`Greg McKeown`},
+  {id:37,  g:'self-help', q:`The way of the Essentialist is the relentless pursuit of less but better.`, book:`Essentialism`, by:`Greg McKeown`},
+  {id:38,  g:'self-help', q:`Success is sequential, not simultaneous.`, book:`The ONE Thing`, by:`Gary Keller`},
+  {id:39,  g:'self-help', q:`It is not that we have a short time to live, but that we waste a good deal of it.`, book:`The ONE Thing`, by:`Gary Keller`},
+  {id:40,  g:'self-help', q:`Vulnerability is not weakness. And that myth is profoundly dangerous.`, book:`Daring Greatly`, by:`Brené Brown`},
+  {id:41,  g:'self-help', q:`Vulnerability is the birthplace of innovation, creativity and change.`, book:`Daring Greatly`, by:`Brené Brown`},
+  {id:42,  g:'self-help', q:`Owning our story and loving ourselves through that process is the bravest thing that we will ever do.`, book:`Daring Greatly`, by:`Brené Brown`},
+  {id:43,  g:'self-help', q:`The willingness to show up changes us. It makes us a little braver each time.`, book:`Daring Greatly`, by:`Brené Brown`},
+  {id:44,  g:'self-help', q:`You are enough. You have enough. You do enough.`, book:`The Gifts of Imperfection`, by:`Brené Brown`},
+  {id:45,  g:'self-help', q:`Authenticity is the daily practice of letting go of who we think we're supposed to be and embracing who we are.`, book:`The Gifts of Imperfection`, by:`Brené Brown`},
+  {id:46,  g:'self-help', q:`Think like a monk means training your mind to see the good in everything and find peace in chaos.`, book:`Think Like a Monk`, by:`Jay Shetty`},
+  {id:47,  g:'self-help', q:`The more clearly we can see our identity, the easier it is to make decisions about who we want to be.`, book:`Think Like a Monk`, by:`Jay Shetty`},
+  {id:48,  g:'self-help', q:`When you know your purpose, you know where to direct your energy.`, book:`Think Like a Monk`, by:`Jay Shetty`},
+  {id:49,  g:'self-help', q:`Life is available only in the present moment. If you abandon the present moment you cannot live the moments of your daily life deeply.`, book:`The Miracle of Mindfulness`, by:`Thich Nhat Hanh`},
+  {id:50,  g:'self-help', q:`The most fundamental aggression to ourselves, the most fundamental harm we can do to ourselves, is to remain ignorant by not having the courage and the respect to look at ourselves honestly and gently.`, book:`When Things Fall Apart`, by:`Pema Chödrön`},
+  {id:51,  g:'self-help', q:`Nothing ever goes away until it has taught us what we need to know.`, book:`When Things Fall Apart`, by:`Pema Chödrön`},
+  {id:52,  g:'self-help', q:`The present moment is the only moment available to us, and it is the door to all moments.`, book:`The Miracle of Mindfulness`, by:`Thich Nhat Hanh`},
+  {id:53,  g:'self-help', q:`Stop being afraid of what could go wrong, and start being excited about what could go right.`, book:`The Magic of Thinking Big`, by:`David J. Schwartz`},
+  {id:54,  g:'self-help', q:`Believe it can be done. When you believe something can be done, your mind will find the ways to do it.`, book:`The Magic of Thinking Big`, by:`David J. Schwartz`},
+  {id:55,  g:'self-help', q:`The size of your success is determined by the size of your belief.`, book:`The Magic of Thinking Big`, by:`David J. Schwartz`},
+  {id:56,  g:'self-help', q:`Self-discipline is the ability to make yourself do what you should do, when you should do it, whether you feel like it or not.`, book:`No Excuses!`, by:`Brian Tracy`},
+  {id:57,  g:'self-help', q:`Move out of your comfort zone. You can only grow if you are willing to feel awkward and uncomfortable when you try something new.`, book:`No Excuses!`, by:`Brian Tracy`},
+  {id:58,  g:'self-help', q:`Your life only gets better when you get better.`, book:`No Excuses!`, by:`Brian Tracy`},
+  {id:59,  g:'self-help', q:`We cannot solve our problems with the same thinking we used when we created them.`, book:`The Road Less Travelled`, by:`M. Scott Peck`},
+  {id:60,  g:'self-help', q:`Life is difficult. This is a great truth, one of the greatest truths. It is a great truth because once we truly know that life is difficult, we transcend it.`, book:`The Road Less Travelled`, by:`M. Scott Peck`},
+  {id:61,  g:'self-help', q:`Share your strengths, not your weaknesses.`, book:`The Road Less Travelled`, by:`M. Scott Peck`},
+  {id:62,  g:'self-help', q:`You have to be willing to be misunderstood if you're going to innovate.`, book:`Invent and Wander`, by:`Jeff Bezos`},
+  {id:63,  g:'self-help', q:`What's dangerous is not to evolve.`, book:`Invent and Wander`, by:`Jeff Bezos`},
+  {id:64,  g:'self-help', q:`The secret of getting ahead is getting started.`, book:`Eat That Frog!`, by:`Brian Tracy`},
+  {id:65,  g:'self-help', q:`Your ability to select your most important task at each moment, and then to get started on that task and to get it done, is the key to high performance and productivity.`, book:`Eat That Frog!`, by:`Brian Tracy`},
+  {id:66,  g:'self-help', q:`The key to success is to focus our conscious mind on things we desire, not things we fear.`, book:`Maximum Achievement`, by:`Brian Tracy`},
+  {id:67,  g:'self-help', q:`What is not started today is never finished tomorrow.`, book:`Faust`, by:`Johann Wolfgang von Goethe`},
+  {id:68,  g:'self-help', q:`The journey of a thousand miles begins with a single step.`, book:`Tao Te Ching`, by:`Lao Tzu`},
+  {id:69,  g:'self-help', q:`Knowing others is intelligence; knowing yourself is true wisdom. Mastering others is strength; mastering yourself is true power.`, book:`Tao Te Ching`, by:`Lao Tzu`},
+  {id:70,  g:'self-help', q:`To the mind that is still, the whole universe surrenders.`, book:`Tao Te Ching`, by:`Lao Tzu`},
+  {id:71,  g:'self-help', q:`Be careful with how much you tolerate. You are teaching people how to treat you.`, book:`Boundaries`, by:`Henry Cloud`},
+  {id:72,  g:'self-help', q:`We change our behavior when the pain of staying the same becomes greater than the pain of changing.`, book:`Boundaries`, by:`Henry Cloud`},
+  {id:73,  g:'self-help', q:`What you permit, you promote. What you allow, you encourage. What you condone, you own.`, book:`Boundaries`, by:`Henry Cloud`},
+  {id:74,  g:'self-help', q:`You teach people how to treat you by what you allow, what you stop, and what you reinforce.`, book:`Life Strategies`, by:`Dr. Phil McGraw`},
+  {id:75,  g:'self-help', q:`Do not wait: the time will never be 'just right.' Start where you stand, and work with whatever tools you may have at your command.`, book:`Napoleon Hill's Keys to Success`, by:`Napoleon Hill`},
+
+  // ── PHILOSOPHY ──────────────────────────────────────────────────────
+  {id:76,  g:'philosophy', q:`You have power over your mind — not outside events. Realize this, and you will find strength.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:77,  g:'philosophy', q:`Waste no more time arguing about what a good man should be. Be one.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:78,  g:'philosophy', q:`It is not death that a man should fear, but he should fear never beginning to live.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:79,  g:'philosophy', q:`You could leave life right now. Let that determine what you do and say and think.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:80,  g:'philosophy', q:`The impediment to action advances action. What stands in the way becomes the way.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:81,  g:'philosophy', q:`Never let the future disturb you. You will meet it, if you have to, with the same weapons of reason which today arm you against the present.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:82,  g:'philosophy', q:`Accept the things to which fate binds you, and love the people with whom fate brings you together.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:83,  g:'philosophy', q:`The best revenge is not to be like your enemy.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:84,  g:'philosophy', q:`If it is not right, do not do it; if it is not true, do not say it.`, book:`Meditations`, by:`Marcus Aurelius`},
+  {id:85,  g:'philosophy', q:`When we are no longer able to change a situation, we are challenged to change ourselves.`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:86,  g:'philosophy', q:`Everything can be taken from a man but one thing: the last of the human freedoms — to choose one's attitude in any given set of circumstances.`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:87,  g:'philosophy', q:`Those who have a 'why' to live can bear with almost any 'how.'`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:88,  g:'philosophy', q:`Between stimulus and response there is a space. In that space is our power to choose our response. In our response lies our growth and our freedom.`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:89,  g:'philosophy', q:`An abnormal reaction to an abnormal situation is normal behavior.`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:90,  g:'philosophy', q:`Each man is questioned by life; and he can only answer to life by answering for his own life.`, book:`Man's Search for Meaning`, by:`Viktor Frankl`},
+  {id:91,  g:'philosophy', q:`The obstacle is the way. What stands in the way becomes the way.`, book:`The Obstacle Is the Way`, by:`Ryan Holiday`},
+  {id:92,  g:'philosophy', q:`Persist and resist. Persist in your efforts. Resist giving in to distraction, discouragement, or disorder.`, book:`The Obstacle Is the Way`, by:`Ryan Holiday`},
+  {id:93,  g:'philosophy', q:`We have the power to use the obstacle against itself.`, book:`The Obstacle Is the Way`, by:`Ryan Holiday`},
+  {id:94,  g:'philosophy', q:`There is no good or bad without us. There is only perception.`, book:`The Obstacle Is the Way`, by:`Ryan Holiday`},
+  {id:95,  g:'philosophy', q:`Luck is what happens when preparation meets opportunity.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:96,  g:'philosophy', q:`It is not that I'm so smart. But I stay with the questions much longer.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:97,  g:'philosophy', q:`Begin at once to live, and count each separate day as a separate life.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:98,  g:'philosophy', q:`We suffer more in imagination than in reality.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:99,  g:'philosophy', q:`It is not the man who has too little, but the man who craves more, that is poor.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:100, g:'philosophy', q:`Throw me to the wolves and I will return leading the pack.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:101, g:'philosophy', q:`Make the best use of what is in your power, and take the rest as it happens.`, book:`Enchiridion`, by:`Epictetus`},
+  {id:102, g:'philosophy', q:`We cannot choose our external circumstances, but we can always choose how we respond to them.`, book:`Enchiridion`, by:`Epictetus`},
+  {id:103, g:'philosophy', q:`He is a wise man who does not grieve for the things which he has not, but rejoices for those which he has.`, book:`Enchiridion`, by:`Epictetus`},
+  {id:104, g:'philosophy', q:`First say to yourself what you would be; and then do what you have to do.`, book:`Enchiridion`, by:`Epictetus`},
+  {id:105, g:'philosophy', q:`Seek not the good in external things; seek it in yourselves.`, book:`Enchiridion`, by:`Epictetus`},
+  {id:106, g:'philosophy', q:`God, grant me the serenity to accept the things I cannot change, the courage to change the things I can, and the wisdom to know the difference.`, book:`The Serenity Prayer`, by:`Reinhold Niebuhr`},
+  {id:107, g:'philosophy', q:`The unexamined life is not worth living.`, book:`Apology`, by:`Plato (Socrates)`},
+  {id:108, g:'philosophy', q:`I know that I know nothing.`, book:`Apology`, by:`Plato (Socrates)`},
+  {id:109, g:'philosophy', q:`The measure of a man is what he does with power.`, book:`The Republic`, by:`Plato`},
+  {id:110, g:'philosophy', q:`Wise men speak because they have something to say; fools because they have to say something.`, book:`The Republic`, by:`Plato`},
+  {id:111, g:'philosophy', q:`Courage is knowing what not to fear.`, book:`The Republic`, by:`Plato`},
+  {id:112, g:'philosophy', q:`Do I dare disturb the universe? In a minute there is time for decisions and revisions which a minute will reverse.`, book:`The Love Song of J. Alfred Prufrock`, by:`T.S. Eliot`},
+  {id:113, g:'philosophy', q:`That which does not kill us makes us stronger.`, book:`Twilight of the Idols`, by:`Friedrich Nietzsche`},
+  {id:114, g:'philosophy', q:`One must still have chaos in oneself to be able to give birth to a dancing star.`, book:`Thus Spoke Zarathustra`, by:`Friedrich Nietzsche`},
+  {id:115, g:'philosophy', q:`He who has a why to live can bear almost any how.`, book:`Twilight of the Idols`, by:`Friedrich Nietzsche`},
+  {id:116, g:'philosophy', q:`In individuals, insanity is rare; but in groups, parties, nations, and epochs, it is the rule.`, book:`Beyond Good and Evil`, by:`Friedrich Nietzsche`},
+  {id:117, g:'philosophy', q:`The higher we soar, the smaller we appear to those who cannot fly.`, book:`Thus Spoke Zarathustra`, by:`Friedrich Nietzsche`},
+  {id:118, g:'philosophy', q:`Without music, life would be a mistake.`, book:`Twilight of the Idols`, by:`Friedrich Nietzsche`},
+  {id:119, g:'philosophy', q:`Happiness is not something ready-made. It comes from your own actions.`, book:`The Art of Happiness`, by:`Dalai Lama XIV`},
+  {id:120, g:'philosophy', q:`If you want others to be happy, practice compassion. If you want to be happy, practice compassion.`, book:`The Art of Happiness`, by:`Dalai Lama XIV`},
+  {id:121, g:'philosophy', q:`The purpose of our lives is to be happy.`, book:`The Art of Happiness`, by:`Dalai Lama XIV`},
+  {id:122, g:'philosophy', q:`Hell is other people.`, book:`No Exit`, by:`Jean-Paul Sartre`},
+  {id:123, g:'philosophy', q:`Existence precedes essence.`, book:`Existentialism Is a Humanism`, by:`Jean-Paul Sartre`},
+  {id:124, g:'philosophy', q:`Man is condemned to be free; because once thrown into the world, he is responsible for everything he does.`, book:`Existentialism Is a Humanism`, by:`Jean-Paul Sartre`},
+  {id:125, g:'philosophy', q:`I rebel; therefore I exist.`, book:`The Rebel`, by:`Albert Camus`},
+  {id:126, g:'philosophy', q:`In the depths of winter, I finally learned that within me there lay an invincible summer.`, book:`The Myth of Sisyphus`, by:`Albert Camus`},
+  {id:127, g:'philosophy', q:`You will never be happy if you continue to search for what happiness consists of. You will never live if you are looking for the meaning of life.`, book:`The Myth of Sisyphus`, by:`Albert Camus`},
+  {id:128, g:'philosophy', q:`One must imagine Sisyphus happy.`, book:`The Myth of Sisyphus`, by:`Albert Camus`},
+  {id:129, g:'philosophy', q:`Real generosity toward the future lies in giving all to the present.`, book:`The Myth of Sisyphus`, by:`Albert Camus`},
+  {id:130, g:'philosophy', q:`Simplicity is the ultimate sophistication.`, book:`Notebooks`, by:`Leonardo da Vinci`},
+  {id:131, g:'philosophy', q:`Knowing is not enough; we must apply. Willing is not enough; we must do.`, book:`Wilhelm Meister's Apprenticeship`, by:`Johann Wolfgang von Goethe`},
+
+  // ── BUSINESS ──────────────────────────────────────────────────────
+  {id:132, g:'business', q:`The poor and the middle class work for money. The rich have money work for them.`, book:`Rich Dad Poor Dad`, by:`Robert T. Kiyosaki`},
+  {id:133, g:'business', q:`The single most powerful asset we all have is our mind. If it is trained well, it can create enormous wealth.`, book:`Rich Dad Poor Dad`, by:`Robert T. Kiyosaki`},
+  {id:134, g:'business', q:`It's not how much money you make, but how much money you keep and how hard it works for you.`, book:`Rich Dad Poor Dad`, by:`Robert T. Kiyosaki`},
+  {id:135, g:'business', q:`The primary reason the majority of people struggle financially is that they have spent years in school but learned nothing about money.`, book:`Rich Dad Poor Dad`, by:`Robert T. Kiyosaki`},
+  {id:136, g:'business', q:`Assets put money in your pocket. Liabilities take money from your pocket.`, book:`Rich Dad Poor Dad`, by:`Robert T. Kiyosaki`},
+  {id:137, g:'business', q:`Every great business is built around a secret that's hidden from the outside.`, book:`Zero to One`, by:`Peter Thiel`},
+  {id:138, g:'business', q:`Brilliant thinking is rare, but courage is in even shorter supply than genius.`, book:`Zero to One`, by:`Peter Thiel`},
+  {id:139, g:'business', q:`Monopoly is the condition of every successful business.`, book:`Zero to One`, by:`Peter Thiel`},
+  {id:140, g:'business', q:`The best investments are the ones that seem impossibly ambitious.`, book:`Zero to One`, by:`Peter Thiel`},
+  {id:141, g:'business', q:`You can make more friends in two months by becoming interested in other people than you can in two years by trying to get other people interested in you.`, book:`How to Win Friends & Influence People`, by:`Dale Carnegie`},
+  {id:142, g:'business', q:`Talk to someone about themselves and they'll listen for hours.`, book:`How to Win Friends & Influence People`, by:`Dale Carnegie`},
+  {id:143, g:'business', q:`A man convinced against his will is of the same opinion still.`, book:`How to Win Friends & Influence People`, by:`Dale Carnegie`},
+  {id:144, g:'business', q:`The only way to get the best of an argument is to avoid it.`, book:`How to Win Friends & Influence People`, by:`Dale Carnegie`},
+  {id:145, g:'business', q:`Whatever the mind can conceive and believe, it can achieve.`, book:`Think and Grow Rich`, by:`Napoleon Hill`},
+  {id:146, g:'business', q:`Strength and growth come only through continuous effort and struggle.`, book:`Think and Grow Rich`, by:`Napoleon Hill`},
+  {id:147, g:'business', q:`The starting point of all achievement is desire. Keep this constantly in mind.`, book:`Think and Grow Rich`, by:`Napoleon Hill`},
+  {id:148, g:'business', q:`Riches don't respond to wishes. They respond only to definite plans, backed by definite desires.`, book:`Think and Grow Rich`, by:`Napoleon Hill`},
+  {id:149, g:'business', q:`Your big opportunity may be right where you are now.`, book:`Think and Grow Rich`, by:`Napoleon Hill`},
+  {id:150, g:'business', q:`Good to great companies did not focus principally on what to do to become great; they focused equally on what not to do and what to stop doing.`, book:`Good to Great`, by:`Jim Collins`},
+  {id:151, g:'business', q:`The good-to-great companies understood a simple truth: the right people are your most important asset.`, book:`Good to Great`, by:`Jim Collins`},
+  {id:152, g:'business', q:`Greatness is not a function of circumstance. Greatness, it turns out, is largely a matter of conscious choice and discipline.`, book:`Good to Great`, by:`Jim Collins`},
+  {id:153, g:'business', q:`Confront the brutal facts of your current reality, whatever they might be.`, book:`Good to Great`, by:`Jim Collins`},
+  {id:154, g:'business', q:`Plans are worthless, but planning is everything.`, book:`The Lean Startup`, by:`Eric Ries`},
+  {id:155, g:'business', q:`The only way to win is to learn faster than anyone else.`, book:`The Lean Startup`, by:`Eric Ries`},
+  {id:156, g:'business', q:`People don't buy what you do; they buy why you do it.`, book:`Start with Why`, by:`Simon Sinek`},
+  {id:157, g:'business', q:`Working hard for something we don't care about is called stress. Working hard for something we love is called passion.`, book:`Start with Why`, by:`Simon Sinek`},
+  {id:158, g:'business', q:`Leadership is not about being in charge. It is about taking care of those in your charge.`, book:`Leaders Eat Last`, by:`Simon Sinek`},
+  {id:159, g:'business', q:`A boss has the title. A leader has the people.`, book:`Leaders Eat Last`, by:`Simon Sinek`},
+  {id:160, g:'business', q:`The goal is not to do business with everybody who needs what you have. The goal is to do business with people who believe what you believe.`, book:`Start with Why`, by:`Simon Sinek`},
+  {id:161, g:'business', q:`Focus on being productive instead of busy.`, book:`The 4-Hour Workweek`, by:`Tim Ferriss`},
+  {id:162, g:'business', q:`What we fear doing most is usually what we most need to do.`, book:`The 4-Hour Workweek`, by:`Tim Ferriss`},
+  {id:163, g:'business', q:`Someday is a disease that will take your dreams to the grave with you.`, book:`The 4-Hour Workweek`, by:`Tim Ferriss`},
+  {id:164, g:'business', q:`A person's success in life can usually be measured by the number of uncomfortable conversations he or she is willing to have.`, book:`The 4-Hour Workweek`, by:`Tim Ferriss`},
+  {id:165, g:'business', q:`Never negotiate with yourself.`, book:`Never Split the Difference`, by:`Chris Voss`},
+  {id:166, g:'business', q:`He who has learned to disagree without being disagreeable has discovered the most valuable secret of negotiation.`, book:`Never Split the Difference`, by:`Chris Voss`},
+  {id:167, g:'business', q:`The most dangerous negotiation is the one you don't know you're in.`, book:`Never Split the Difference`, by:`Chris Voss`},
+  {id:168, g:'business', q:`No is not a failure. It's a signpost toward yes.`, book:`Never Split the Difference`, by:`Chris Voss`},
+  {id:169, g:'business', q:`If you're not embarrassed by the first version of your product, you've launched too late.`, book:`The Startup Owner's Manual`, by:`Steve Blank`},
+  {id:170, g:'business', q:`Stay hungry. Stay foolish.`, book:`Stanford Commencement Address`, by:`Steve Jobs`},
+  {id:171, g:'business', q:`Innovation distinguishes between a leader and a follower.`, book:`Steve Jobs`, by:`Walter Isaacson`},
+  {id:172, g:'business', q:`The ones who are crazy enough to think they can change the world, are the ones that do.`, book:`Here's to the Crazy Ones (Apple ad)`, by:`Steve Jobs`},
+  {id:173, g:'business', q:`Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.`, book:`Stanford Commencement Address`, by:`Steve Jobs`},
+  {id:174, g:'business', q:`Revenue is vanity. Profit is sanity. Cash is king.`, book:`Profit First`, by:`Mike Michalowicz`},
+  {id:175, g:'business', q:`Entrepreneurship is living a few years of your life like most people won't, so that you can spend the rest of your life like most people can't.`, book:`Rework`, by:`Jason Fried`},
+  {id:176, g:'business', q:`Build half a product, not a half-assed product.`, book:`Rework`, by:`Jason Fried`},
+  {id:177, g:'business', q:`Meetings are toxic.`, book:`Rework`, by:`Jason Fried`},
+  {id:178, g:'business', q:`Embrace constraints. Limited resources force you to make do with what you've got. There's no room for waste.`, book:`Rework`, by:`Jason Fried`},
+  {id:179, g:'business', q:`The hard thing about hard things is that there is no formula for dealing with them.`, book:`The Hard Thing About Hard Things`, by:`Ben Horowitz`},
+  {id:180, g:'business', q:`Nobody cares. Take care of your people.`, book:`The Hard Thing About Hard Things`, by:`Ben Horowitz`},
+  {id:181, g:'business', q:`In peacetime, leaders can afford to focus on the big picture and push decision-making down. In wartime, they must make every decision themselves.`, book:`The Hard Thing About Hard Things`, by:`Ben Horowitz`},
+  {id:182, g:'business', q:`Principles are the foundation of your life. They are your values, your beliefs, your goals. Know them deeply.`, book:`Principles`, by:`Ray Dalio`},
+  {id:183, g:'business', q:`Pain plus reflection equals progress.`, book:`Principles`, by:`Ray Dalio`},
+  {id:184, g:'business', q:`Radical transparency is the key to avoiding the politics and bureaucracy that will kill your company.`, book:`Principles`, by:`Ray Dalio`},
+  {id:185, g:'business', q:`The best way to change the world is to change yourself first.`, book:`Shoe Dog`, by:`Phil Knight`},
+  {id:186, g:'business', q:`Have faith in yourself, but also have faith in faith itself.`, book:`Shoe Dog`, by:`Phil Knight`},
+  {id:187, g:'business', q:`The cowards never started and the weak died along the way. That leaves us, ladies and gentlemen. Us.`, book:`Shoe Dog`, by:`Phil Knight`},
+
+  // ── PSYCHOLOGY ──────────────────────────────────────────────────────
+  {id:188, g:'psychology', q:`Nothing in life is as important as you think it is, while you are thinking about it.`, book:`Thinking, Fast and Slow`, by:`Daniel Kahneman`},
+  {id:189, g:'psychology', q:`We are prone to overestimate how much we understand about the world and to underestimate the role of chance in events.`, book:`Thinking, Fast and Slow`, by:`Daniel Kahneman`},
+  {id:190, g:'psychology', q:`A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.`, book:`Thinking, Fast and Slow`, by:`Daniel Kahneman`},
+  {id:191, g:'psychology', q:`The confidence we experience as we make a decision is not a reasoned evaluation of the probability that it is right.`, book:`Thinking, Fast and Slow`, by:`Daniel Kahneman`},
+  {id:192, g:'psychology', q:`We think, each of us, that we're much more rational than we are.`, book:`Thinking, Fast and Slow`, by:`Daniel Kahneman`},
+  {id:193, g:'psychology', q:`Being traumatized means continuing to organize your life as if the trauma were still going on.`, book:`The Body Keeps the Score`, by:`Bessel van der Kolk`},
+  {id:194, g:'psychology', q:`As long as you keep secrets and suppress information, you are fundamentally at war with yourself.`, book:`The Body Keeps the Score`, by:`Bessel van der Kolk`},
+  {id:195, g:'psychology', q:`Traumatized people chronically feel unsafe inside their bodies: The past is alive in the form of gnawing interior discomfort.`, book:`The Body Keeps the Score`, by:`Bessel van der Kolk`},
+  {id:196, g:'psychology', q:`The good life is a process, not a state of being. It is a direction, not a destination.`, book:`On Becoming a Person`, by:`Carl R. Rogers`},
+  {id:197, g:'psychology', q:`The curious paradox is that when I accept myself just as I am, then I can change.`, book:`On Becoming a Person`, by:`Carl R. Rogers`},
+  {id:198, g:'psychology', q:`Until you make the unconscious conscious, it will direct your life and you will call it fate.`, book:`Psychology and Alchemy`, by:`Carl Jung`},
+  {id:199, g:'psychology', q:`The most terrifying thing is to accept oneself completely.`, book:`Letters`, by:`Carl Jung`},
+  {id:200, g:'psychology', q:`Your visions will become clear only when you can look into your own heart. Who looks outside, dreams; who looks inside, awakes.`, book:`Letters`, by:`Carl Jung`},
+  {id:201, g:'psychology', q:`Loneliness does not come from having no people around, but from being unable to communicate the things that seem important to oneself.`, book:`Memories, Dreams, Reflections`, by:`Carl Jung`},
+  {id:202, g:'psychology', q:`The most common form of despair is not being who you are.`, book:`The Sickness Unto Death`, by:`Søren Kierkegaard`},
+  {id:203, g:'psychology', q:`The greatest hazard of all, losing the self, can occur very quietly in the world, as if it were nothing at all.`, book:`The Sickness Unto Death`, by:`Søren Kierkegaard`},
+  {id:204, g:'psychology', q:`Anxiety is the dizziness of freedom.`, book:`The Concept of Anxiety`, by:`Søren Kierkegaard`},
+  {id:205, g:'psychology', q:`Flow is being completely involved in an activity for its own sake. The ego falls away.`, book:`Flow`, by:`Mihaly Csikszentmihalyi`},
+  {id:206, g:'psychology', q:`The best moments in our lives are not the passive, receptive, relaxing times — although such experiences can also be enjoyable. The best moments usually occur when a person's body or mind is stretched to its limits.`, book:`Flow`, by:`Mihaly Csikszentmihalyi`},
+  {id:207, g:'psychology', q:`Attention is our most important tool in the task of improving the quality of experience.`, book:`Flow`, by:`Mihaly Csikszentmihalyi`},
+  {id:208, g:'psychology', q:`The chains of habit are too light to be felt until they are too heavy to be broken.`, book:`The Power of Habit`, by:`Charles Duhigg`},
+  {id:209, g:'psychology', q:`Change might not be fast and it isn't always easy. But with time and effort, almost any habit can be reshaped.`, book:`The Power of Habit`, by:`Charles Duhigg`},
+  {id:210, g:'psychology', q:`Champions don't do extraordinary things. They do ordinary things, but they do them without thinking.`, book:`The Power of Habit`, by:`Charles Duhigg`},
+  {id:211, g:'psychology', q:`People with high emotional intelligence earn more than others, are in better relationships, and have better mental health.`, book:`Emotional Intelligence`, by:`Daniel Goleman`},
+  {id:212, g:'psychology', q:`If your emotional abilities aren't in hand, if you don't have self-awareness, if you are not able to manage your distressing emotions, if you can't have empathy and have effective relationships, then no matter how smart you are, you are not going to get very far.`, book:`Emotional Intelligence`, by:`Daniel Goleman`},
+  {id:213, g:'psychology', q:`In a very real sense we have two minds, one that thinks and one that feels.`, book:`Emotional Intelligence`, by:`Daniel Goleman`},
+  {id:214, g:'psychology', q:`Grit is passion and perseverance for very long-term goals.`, book:`Grit`, by:`Angela Duckworth`},
+  {id:215, g:'psychology', q:`Enthusiasm is common. Endurance is rare.`, book:`Grit`, by:`Angela Duckworth`},
+  {id:216, g:'psychology', q:`Without effort, your talent is nothing more than your unmet potential.`, book:`Grit`, by:`Angela Duckworth`},
+  {id:217, g:'psychology', q:`The highly sensitive are too often perceived as weaklings or damaged goods. To feel intensely is not a symptom of weakness; it is the trademark of the truly alive.`, book:`Emotional Sensitivity and Intensity`, by:`Imi Lo`},
+  {id:218, g:'psychology', q:`Introverts listen more than they talk, think before they speak, and often feel as if they express themselves better in writing than in conversation.`, book:`Quiet`, by:`Susan Cain`},
+  {id:219, g:'psychology', q:`There's zero correlation between being the best talker and having the best ideas.`, book:`Quiet`, by:`Susan Cain`},
+  {id:220, g:'psychology', q:`Don't think of introversion as something that needs to be cured.`, book:`Quiet`, by:`Susan Cain`},
+  {id:221, g:'psychology', q:`The secret to getting ahead is getting started.`, book:`Learned Optimism`, by:`Martin E.P. Seligman`},
+  {id:222, g:'psychology', q:`Pessimism is, in the end, a self-fulfilling prophecy.`, book:`Learned Optimism`, by:`Martin E.P. Seligman`},
+  {id:223, g:'psychology', q:`The basis of optimism is not bright slogans or fuzzy thinking but a specific mode of thinking.`, book:`Learned Optimism`, by:`Martin E.P. Seligman`},
+  {id:224, g:'psychology', q:`We are more than the worst thing that has ever happened to us.`, book:`Maybe You Should Talk to Someone`, by:`Lori Gottlieb`},
+  {id:225, g:'psychology', q:`Insight is the booby prize of therapy.`, book:`Maybe You Should Talk to Someone`, by:`Lori Gottlieb`},
+  {id:226, g:'psychology', q:`The nature of life is to change. The challenge of life is to accept that change and then figure out what to do next.`, book:`Maybe You Should Talk to Someone`, by:`Lori Gottlieb`},
+  {id:227, g:'psychology', q:`You own everything that happened to you. Tell your stories. If people wanted you to write warmly about them, they should've behaved better.`, book:`Bird by Bird`, by:`Anne Lamott`},
+  {id:228, g:'psychology', q:`Almost everything will work again if you unplug it for a few minutes, including you.`, book:`Bird by Bird`, by:`Anne Lamott`},
+  {id:229, g:'psychology', q:`Perfectionism is the voice of the oppressor, the enemy of the people.`, book:`Bird by Bird`, by:`Anne Lamott`},
+  {id:230, g:'psychology', q:`Comparison is the thief of joy.`, book:`Daring Greatly`, by:`Theodore Roosevelt (quoted)`},
+  {id:231, g:'psychology', q:`Shame is the most powerful, master emotion. It's the fear that we're not good enough.`, book:`Daring Greatly`, by:`Brené Brown`},
+  {id:232, g:'psychology', q:`Empathy is feeling with people. Sympathy is feeling for people.`, book:`The Gifts of Imperfection`, by:`Brené Brown`},
+  {id:233, g:'psychology', q:`Courage starts with showing up and letting ourselves be seen.`, book:`Daring Greatly`, by:`Brené Brown`},
+
+  // ── SPIRITUALITY ──────────────────────────────────────────────────────
+  {id:234, g:'spirituality', q:`And, when you want something, all the universe conspires in helping you to achieve it.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:235, g:'spirituality', q:`It's the possibility of having a dream come true that makes life interesting.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:236, g:'spirituality', q:`The secret of life, though, is to fall seven times and to get up eight times.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:237, g:'spirituality', q:`Tell your heart that the fear of suffering is worse than the suffering itself.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:238, g:'spirituality', q:`When you want something with all your heart, that's when you are closest to the Soul of the World.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:239, g:'spirituality', q:`Every blessing ignored becomes a curse.`, book:`The Alchemist`, by:`Paulo Coelho`},
+  {id:240, g:'spirituality', q:`Love is not a habit, a commitment, or a debt. It isn't what romantic songs tell us it is — love simply is.`, book:`By the River Piedra I Sat Down and Wept`, by:`Paulo Coelho`},
+  {id:241, g:'spirituality', q:`Be impeccable with your word. Speak with integrity. Say only what you mean.`, book:`The Four Agreements`, by:`Don Miguel Ruiz`},
+  {id:242, g:'spirituality', q:`Don't take anything personally. Nothing others do is because of you.`, book:`The Four Agreements`, by:`Don Miguel Ruiz`},
+  {id:243, g:'spirituality', q:`Don't make assumptions. Find the courage to ask questions and to express what you really want.`, book:`The Four Agreements`, by:`Don Miguel Ruiz`},
+  {id:244, g:'spirituality', q:`Always do your best. Your best is going to change from moment to moment; it will be different when you are healthy as opposed to sick.`, book:`The Four Agreements`, by:`Don Miguel Ruiz`},
+  {id:245, g:'spirituality', q:`Out beyond ideas of wrongdoing and rightdoing, there is a field. I'll meet you there.`, book:`The Masnavi`, by:`Rumi`},
+  {id:246, g:'spirituality', q:`Silence is the language of God; all else is poor translation.`, book:`The Masnavi`, by:`Rumi`},
+  {id:247, g:'spirituality', q:`Your task is not to seek for love, but merely to seek and find all the barriers within yourself that you have built against it.`, book:`The Masnavi`, by:`Rumi`},
+  {id:248, g:'spirituality', q:`Let yourself be silently drawn by the strange pull of what you really love. It will not lead you astray.`, book:`The Masnavi`, by:`Rumi`},
+  {id:249, g:'spirituality', q:`When you do things from your soul, you feel a river moving in you, a joy.`, book:`The Masnavi`, by:`Rumi`},
+  {id:250, g:'spirituality', q:`The wound is the place where the Light enters you.`, book:`The Masnavi`, by:`Rumi`},
+  {id:251, g:'spirituality', q:`Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.`, book:`The Masnavi`, by:`Rumi`},
+  {id:252, g:'spirituality', q:`Don't be satisfied with stories, how things have gone with others. Unfold your own myth.`, book:`The Masnavi`, by:`Rumi`},
+  {id:253, g:'spirituality', q:`In your light I learn how to love. In your beauty, how to make poems. You dance inside my chest where no-one sees you.`, book:`The Masnavi`, by:`Rumi`},
+  {id:254, g:'spirituality', q:`Your heart knows the way. Run in that direction.`, book:`The Masnavi`, by:`Rumi`},
+  {id:255, g:'spirituality', q:`Your hand opens and closes, opens and closes. If it were always a fist or always stretched open, you would be paralysed.`, book:`The Masnavi`, by:`Rumi`},
+  {id:256, g:'spirituality', q:`The most beautiful thing we can experience is the mysterious. It is the source of all true art and science.`, book:`Living Philosophies`, by:`Albert Einstein`},
+  {id:257, g:'spirituality', q:`A human being is part of a whole, called by us the Universe — a part limited in time and space. He experiences himself, his thoughts and feelings, as something separated from the rest, a kind of optical delusion of his consciousness.`, book:`Letter of 1950`, by:`Albert Einstein`},
+  {id:258, g:'spirituality', q:`Once you replace negative thoughts with positive ones, you'll start having positive results.`, book:`The Greatest Salesman in the World`, by:`Og Mandino`},
+  {id:259, g:'spirituality', q:`I will greet this day with love in my heart.`, book:`The Greatest Salesman in the World`, by:`Og Mandino`},
+  {id:260, g:'spirituality', q:`I will persist until I succeed.`, book:`The Greatest Salesman in the World`, by:`Og Mandino`},
+  {id:261, g:'spirituality', q:`The Prophet said: 'Kill the snake of desire before it kills you.'`, book:`The Prophet`, by:`Kahlil Gibran`},
+  {id:262, g:'spirituality', q:`Your children are not your children. They are the sons and daughters of Life's longing for itself.`, book:`The Prophet`, by:`Kahlil Gibran`},
+  {id:263, g:'spirituality', q:`Work is love made visible.`, book:`The Prophet`, by:`Kahlil Gibran`},
+  {id:264, g:'spirituality', q:`You give but little when you give of your possessions. It is when you give of yourself that you truly give.`, book:`The Prophet`, by:`Kahlil Gibran`},
+  {id:265, g:'spirituality', q:`Beauty is not in the face; beauty is a light in the heart.`, book:`The Broken Wings`, by:`Kahlil Gibran`},
+  {id:266, g:'spirituality', q:`The present moment is the only moment available to us, and it is the door to all moments.`, book:`The Miracle of Mindfulness`, by:`Thich Nhat Hanh`},
+  {id:267, g:'spirituality', q:`Because you are alive, everything is possible.`, book:`Touching Peace`, by:`Thich Nhat Hanh`},
+  {id:268, g:'spirituality', q:`The most precious gift we can offer anyone is our attention.`, book:`Peace Is Every Step`, by:`Thich Nhat Hanh`},
+  {id:269, g:'spirituality', q:`Drink your tea slowly and reverently, as if it is the axis on which the earth revolves.`, book:`Present Moment Wonderful Moment`, by:`Thich Nhat Hanh`},
+  {id:270, g:'spirituality', q:`Nothing ever goes away until it has taught us what we need to know.`, book:`When Things Fall Apart`, by:`Pema Chödrön`},
+  {id:271, g:'spirituality', q:`Fear is a natural reaction to moving closer to the truth.`, book:`When Things Fall Apart`, by:`Pema Chödrön`},
+  {id:272, g:'spirituality', q:`The spiritual path is one of falling on your face, getting up, brushing yourself off, turning and looking sheepishly at God, and then taking the next step.`, book:`When Things Fall Apart`, by:`Pema Chödrön`},
+  {id:273, g:'spirituality', q:`We are always only one step from the next thing that will change everything.`, book:`Big Magic`, by:`Elizabeth Gilbert`},
+  {id:274, g:'spirituality', q:`Fear is always triggered by creativity, because creativity asks you to enter into realms of uncertain outcome.`, book:`Big Magic`, by:`Elizabeth Gilbert`},
+  {id:275, g:'spirituality', q:`Done is better than good.`, book:`Big Magic`, by:`Elizabeth Gilbert`},
+  {id:276, g:'spirituality', q:`Creativity is the relationship between a human being and the mysteries of inspiration.`, book:`Big Magic`, by:`Elizabeth Gilbert`},
+  {id:277, g:'spirituality', q:`You are allowed to be both a masterpiece and a work in progress simultaneously.`, book:`The Gifts of Imperfection`, by:`Brené Brown`},
+  {id:278, g:'spirituality', q:`What we are looking for is what is looking.`, book:`Falling Upward`, by:`Richard Rohr`},
+  {id:279, g:'spirituality', q:`Grace is what God does to us, not what we do for God.`, book:`Everything Belongs`, by:`Richard Rohr`},
+  {id:280, g:'spirituality', q:`The greatest spiritual crisis comes when a person begins to take seriously the flicker of light within them.`, book:`Falling Upward`, by:`Richard Rohr`},
+  {id:281, g:'spirituality', q:`God is found in the present moment, or not at all.`, book:`The Naked Now`, by:`Richard Rohr`},
+  {id:282, g:'spirituality', q:`When you pray, you are not starting the conversation from scratch, just remembering it was never really empty.`, book:`Help, Thanks, Wow`, by:`Anne Lamott`},
+  {id:283, g:'spirituality', q:`Almost everything will work again if you unplug it for a few minutes, including you.`, book:`Help, Thanks, Wow`, by:`Anne Lamott`},
+
+  // ── MORE SELF-HELP ────────────────────────────────────────────────
+  {id:414, g:'self-help', q:`The quality of your life is the quality of your relationships.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:415, g:'self-help', q:`Setting goals is the first step in turning the invisible into the visible.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:416, g:'self-help', q:`It's not about the goal. It's about growing to become the person who can accomplish that goal.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:417, g:'self-help', q:`The path to success is to take massive, determined action.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:418, g:'self-help', q:`Identify your problems, but give your power and energy to solutions.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:419, g:'self-help', q:`You are the average of the five people you spend the most time with.`, book:`The Millionaire Fastlane`, by:`Jim Rohn`},
+  {id:420, g:'self-help', q:`Discipline is the bridge between goals and accomplishment.`, book:`The Seasons of Life`, by:`Jim Rohn`},
+  {id:421, g:'self-help', q:`Work harder on yourself than you do on your job.`, book:`The Art of Exceptional Living`, by:`Jim Rohn`},
+  {id:422, g:'self-help', q:`Success is nothing more than a few simple disciplines, practiced every day.`, book:`The Art of Exceptional Living`, by:`Jim Rohn`},
+  {id:423, g:'self-help', q:`For things to change, you have to change. For things to get better, you have to get better.`, book:`The Art of Exceptional Living`, by:`Jim Rohn`},
+  {id:424, g:'self-help', q:`Don't let someone else's opinion of you become your reality.`, book:`Live Your Dreams`, by:`Les Brown`},
+  {id:425, g:'self-help', q:`You don't have to be great to get started, but you have to get started to be great.`, book:`Live Your Dreams`, by:`Les Brown`},
+  {id:426, g:'self-help', q:`If you take responsibility for yourself you will develop a hunger to accomplish your dreams.`, book:`Live Your Dreams`, by:`Les Brown`},
+  {id:427, g:'self-help', q:`Someone's sitting in the shade today because someone planted a tree a long time ago.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+  {id:428, g:'self-help', q:`The most important investment you can make is in yourself.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+  {id:429, g:'self-help', q:`In the long run, the most important investment you can make is in your own mind.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:430, g:'self-help', q:`Show me the incentive and I'll show you the outcome.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:431, g:'self-help', q:`It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:432, g:'self-help', q:`Comparison is the death of joy.`, book:`Adventures of Huckleberry Finn`, by:`Mark Twain`},
+  {id:433, g:'self-help', q:`The two most important days in your life are the day you are born and the day you find out why.`, book:`Mark Twain's Notebook`, by:`Mark Twain`},
+  {id:434, g:'self-help', q:`Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do.`, book:`P.S. I Love You`, by:`H. Jackson Brown Jr.`},
+  {id:435, g:'self-help', q:`Throw off the bowlines, sail away from the safe harbor, catch the trade winds in your sails.`, book:`P.S. I Love You`, by:`H. Jackson Brown Jr.`},
+  {id:436, g:'self-help', q:`Your time is limited, so don't waste it living someone else's life.`, book:`Stanford Commencement Address`, by:`Steve Jobs`},
+  {id:437, g:'self-help', q:`Have the courage to follow your heart and intuition. They somehow know what you truly want to become.`, book:`Stanford Commencement Address`, by:`Steve Jobs`},
+  {id:438, g:'self-help', q:`Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose.`, book:`Stanford Commencement Address`, by:`Steve Jobs`},
+  {id:439, g:'self-help', q:`The biggest risk is not taking any risk. In a world that's changing really quickly, the only strategy that is guaranteed to fail is not taking risks.`, book:`Interview with Reid Hoffman`, by:`Mark Zuckerberg`},
+  {id:440, g:'self-help', q:`Done is better than perfect.`, book:`The Facebook Way`, by:`Mark Zuckerberg`},
+
+  // ── ADDITIONAL PHILOSOPHY ─────────────────────────────────────────
+  {id:441, g:'philosophy', q:`We are what we think. All that we are arises with our thoughts. With our thoughts, we make the world.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:442, g:'philosophy', q:`Three things cannot be long hidden: the sun, the moon, and the truth.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:443, g:'philosophy', q:`In the end, only three things matter: how much you loved, how gently you lived, and how gracefully you let go.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:444, g:'philosophy', q:`Peace comes from within. Do not seek it without.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:445, g:'philosophy', q:`The mind is everything. What you think, you become.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:446, g:'philosophy', q:`Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:447, g:'philosophy', q:`No one saves us but ourselves. No one can and no one may. We ourselves must walk the path.`, book:`The Dhammapada`, by:`Gautama Buddha`},
+  {id:448, g:'philosophy', q:`To live is to suffer; to survive is to find some meaning in the suffering.`, book:`Will to Power`, by:`Friedrich Nietzsche`},
+  {id:449, g:'philosophy', q:`I am still learning.`, book:`Late Sayings`, by:`Michelangelo`},
+  {id:450, g:'philosophy', q:`We do not learn from experience. We learn from reflecting on experience.`, book:`How We Think`, by:`John Dewey`},
+  {id:451, g:'philosophy', q:`Whoever fights monsters should see to it that in the process he does not become a monster.`, book:`Beyond Good and Evil`, by:`Friedrich Nietzsche`},
+  {id:452, g:'philosophy', q:`To live a creative life, we must lose our fear of being wrong.`, book:`Creative Living Beyond Fear`, by:`Joseph Chilton Pearce`},
+  {id:453, g:'philosophy', q:`If a man knows not to which port he sails, no wind is favorable.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:454, g:'philosophy', q:`Every new beginning comes from some other beginning's end.`, book:`Letters from a Stoic`, by:`Seneca`},
+  {id:455, g:'philosophy', q:`Time heals what reason cannot.`, book:`Agamemnon`, by:`Seneca`},
+  {id:456, g:'philosophy', q:`Withdraw into yourself, as far as you can, with the men who will make you better, and admit those whom you can make better.`, book:`Letters from a Stoic`, by:`Seneca`},
+
+  // ── ADDITIONAL BUSINESS ───────────────────────────────────────────
+  {id:457, g:'business', q:`The best marketing doesn't feel like marketing.`, book:`This Is Marketing`, by:`Seth Godin`},
+  {id:458, g:'business', q:`Marketing is no longer about the stuff that you make, but about the stories you tell.`, book:`All Marketers Are Liars`, by:`Seth Godin`},
+  {id:459, g:'business', q:`Selling to people who actually want to hear from you is more effective than interrupting strangers.`, book:`Permission Marketing`, by:`Seth Godin`},
+  {id:460, g:'business', q:`Ideas that spread, win.`, book:`Purple Cow`, by:`Seth Godin`},
+  {id:461, g:'business', q:`In a crowded marketplace, fitting in is a failure. In a busy marketplace, not standing out is the same as being invisible.`, book:`Purple Cow`, by:`Seth Godin`},
+  {id:462, g:'business', q:`The customer's perception is your reality.`, book:`Customer Satisfaction is Worthless`, by:`Kate Zabriskie`},
+  {id:463, g:'business', q:`Price is what you pay. Value is what you get.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+  {id:464, g:'business', q:`Wide diversification is only required when investors do not understand what they are doing.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+  {id:465, g:'business', q:`Rule No. 1: Never lose money. Rule No. 2: Never forget rule No. 1.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+  {id:466, g:'business', q:`Be fearful when others are greedy, and be greedy when others are fearful.`, book:`The Essays of Warren Buffett`, by:`Warren Buffett`},
+
+  // ── ADDITIONAL PSYCHOLOGY ─────────────────────────────────────────
+  {id:467, g:'psychology', q:`The curious paradox is that when I accept myself just as I am, then I can change.`, book:`On Becoming a Person`, by:`Carl R. Rogers`},
+  {id:468, g:'psychology', q:`What is most personal is most universal.`, book:`On Becoming a Person`, by:`Carl R. Rogers`},
+  {id:469, g:'psychology', q:`Neurosis is always a substitute for legitimate suffering.`, book:`Psychology and Religion`, by:`Carl Jung`},
+  {id:470, g:'psychology', q:`The privilege of a lifetime is to become who you truly are.`, book:`Memories, Dreams, Reflections`, by:`Carl Jung`},
+  {id:471, g:'psychology', q:`One does not become enlightened by imagining figures of light, but by making the darkness conscious.`, book:`The Philosophical Tree`, by:`Carl Jung`},
+  {id:472, g:'psychology', q:`Where the risk is greatest, there the rescue grows also.`, book:`Patmos`, by:`Friedrich Hölderlin`},
+  {id:473, g:'psychology', q:`You might be poor, your shoes might be broken, but your mind is a palace.`, book:`Angela's Ashes`, by:`Frank McCourt`},
+  {id:474, g:'psychology', q:`The most important thing is to try and inspire people so that they can be great in whatever they want to do.`, book:`I Am Malala`, by:`Malala Yousafzai`},
+  {id:475, g:'psychology', q:`One child, one teacher, one book, one pen can change the world.`, book:`I Am Malala`, by:`Malala Yousafzai`},
+  {id:476, g:'psychology', q:`When the whole world is silent, even one voice becomes powerful.`, book:`I Am Malala`, by:`Malala Yousafzai`},
+
+  // ── ADDITIONAL SPIRITUALITY ───────────────────────────────────────
+  {id:477, g:'spirituality', q:`Wherever you go, go with all your heart.`, book:`The Analects`, by:`Confucius`},
+  {id:478, g:'spirituality', q:`The man who asks a question is a fool for a minute. The man who does not ask is a fool for life.`, book:`The Analects`, by:`Confucius`},
+  {id:479, g:'spirituality', q:`By three methods we may learn wisdom: First, by reflection, which is noblest; Second, by imitation, which is easiest; and third by experience, which is the bitterest.`, book:`The Analects`, by:`Confucius`},
+  {id:480, g:'spirituality', q:`Life is really simple, but we insist on making it complicated.`, book:`The Analects`, by:`Confucius`},
+  {id:481, g:'spirituality', q:`The superior man is satisfied and composed; the mean man is always full of distress.`, book:`The Analects`, by:`Confucius`},
+  {id:482, g:'spirituality', q:`Respond to every call that excites your spirit.`, book:`The Masnavi`, by:`Rumi`},
+  {id:483, g:'spirituality', q:`Live where you fear to live. Destroy your reputation. Be notorious.`, book:`The Masnavi`, by:`Rumi`},
+  {id:484, g:'spirituality', q:`Be a lamp, or a lifeboat, or a ladder. Help someone's soul heal.`, book:`The Masnavi`, by:`Rumi`},
+  {id:485, g:'spirituality', q:`Walk out of your house like a shepherd, and come home like a lion.`, book:`The Masnavi`, by:`Rumi`},
+  {id:486, g:'spirituality', q:`Sell your cleverness and buy bewilderment.`, book:`The Masnavi`, by:`Rumi`},
+  {id:487, g:'spirituality', q:`Inside the human being is a jungle. Sometimes wolves dominate, sometimes lions, sometimes dogs.`, book:`The Masnavi`, by:`Rumi`},
+  {id:488, g:'spirituality', q:`This human being is a guest house. Every morning a new arrival.`, book:`The Masnavi`, by:`Rumi`},
+  {id:489, g:'spirituality', q:`You are not a drop in the ocean. You are the entire ocean in a drop.`, book:`The Masnavi`, by:`Rumi`},
+  {id:490, g:'spirituality', q:`In silence there is eloquence. Stop weaving and see how the pattern improves.`, book:`The Masnavi`, by:`Rumi`},
+  {id:491, g:'spirituality', q:`I searched for God and found only myself. I searched for myself and found only God.`, book:`The Masnavi`, by:`Rumi`},
+  {id:492, g:'psychology',   q:`The mind is its own place, and in itself can make a heaven of hell, a hell of heaven.`, book:`Paradise Lost`, by:`John Milton`},
+  {id:493, g:'psychology',   q:`We are all broken, that's how the light gets in.`, book:`Conversations`, by:`Ernest Hemingway`},
+  {id:494, g:'philosophy',   q:`We are all apprentices in a craft where no one ever becomes a master.`, book:`The Wild Years`, by:`Ernest Hemingway`},
+  {id:495, g:'philosophy',   q:`A good head and a good heart are always a formidable combination.`, book:`Long Walk to Freedom`, by:`Nelson Mandela`},
+  {id:496, g:'business',     q:`Selling to people who actually want to hear from you is more effective than interrupting strangers.`, book:`Permission Marketing`, by:`Seth Godin`},
+  {id:497, g:'business',     q:`The customer's perception is your reality.`, book:`Customer Satisfaction is Worthless`, by:`Kate Zabriskie`},
+  {id:498, g:'self-help',    q:`It's not about the goal. It's about growing to become the person who can accomplish that goal.`, book:`Awaken the Giant Within`, by:`Tony Robbins`},
+  {id:499, g:'self-help',    q:`If you take responsibility for yourself you will develop a hunger to accomplish your dreams.`, book:`Live Your Dreams`, by:`Les Brown`},
+  {id:500, g:'self-help',    q:`In the long run, the most important investment you can make is in your own mind.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:501, g:'self-help',    q:`Show me the incentive and I'll show you the outcome.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:502, g:'self-help',    q:`It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.`, book:`Poor Charlie's Almanack`, by:`Charlie Munger`},
+  {id:503, g:'self-help',    q:`Throw off the bowlines, sail away from the safe harbor, catch the trade winds in your sails.`, book:`P.S. I Love You`, by:`H. Jackson Brown Jr.`},
+  {id:504, g:'self-help',    q:`The biggest risk is not taking any risk. In a world that's changing really quickly, the only strategy that is guaranteed to fail is not taking risks.`, book:`Interview with Reid Hoffman`, by:`Mark Zuckerberg`},
+  {id:505, g:'self-help',    q:`Done is better than perfect.`, book:`The Facebook Way`, by:`Mark Zuckerberg`},
+];
+
+const GENRES = [
+  {id:'self-help',    name:'Self-Help',    ico:'⚡', color:'#c084fc'},
+  {id:'philosophy',   name:'Philosophy',   ico:'🧭', color:'#34d399'},
+  {id:'business',     name:'Business',     ico:'💡', color:'#fbbf24'},
+  {id:'psychology',   name:'Psychology',   ico:'🧠', color:'#818cf8'},
+  {id:'spirituality', name:'Spirituality', ico:'✨', color:'#f472b6'},
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let activeGenre = 'all';
+let favs = JSON.parse(localStorage.getItem('qs_favs') || '[]');
+let shuffledFeed = [];
+
+// ─────────────────────────────────────────────
+//  GENRE CHIPS
+// ─────────────────────────────────────────────
+function renderChips() {
+    const el = document.getElementById('genre-filter');
+    const all = [{id:'all', name:'All', ico:'✦'}].concat(GENRES);
+    el.innerHTML = all.map(g =>
+        `<button class="chip ${g.id === activeGenre ? 'active' : ''}" onclick="setGenre('${g.id}')">${g.ico} ${g.name}</button>`
+    ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  FEED
+// ─────────────────────────────────────────────
+function renderFeed() {
+    const feed = document.getElementById('feed');
+    const pool = activeGenre === 'all' ? QUOTES : QUOTES.filter(q => q.g === activeGenre);
+    shuffledFeed = shuffle([...pool]);
+
+    feed.innerHTML = shuffledFeed.map(q => {
+        const saved = favs.some(f => f.id === q.id);
+        const long  = q.q.length > 160;
+        return `
+        <div class="q-card g-${q.g}">
+            <div class="card-top">
+                <span class="gbadge">${genreName(q.g)}</span>
+                <button class="heart-btn ${saved ? 'on' : ''}" data-id="${q.id}" onclick="toggleFav(${q.id}, this)">
+                    ${saved ? '❤️' : '🤍'}
+                </button>
+            </div>
+            <div class="card-body">
+                <span class="qmark">"</span>
+                <p class="qtext ${long ? 'sm' : ''}">${q.q}"</p>
+            </div>
+            <div class="card-foot">
+                <div class="book-title">${q.book}</div>
+                <div class="book-author">— ${q.by}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    feed.scrollTop = 0;
+}
+
+// ─────────────────────────────────────────────
+//  GENRES VIEW
+// ─────────────────────────────────────────────
+function renderGenres() {
+    const grid = document.getElementById('genre-grid');
+    grid.innerHTML = GENRES.map(g => {
+        const count = QUOTES.filter(q => q.g === g.id).length;
+        return `
+        <div class="q-card g-${g.id} genre-tile" onclick="pickGenre('${g.id}')">
+            <div class="tile-ico">${g.ico}</div>
+            <div class="tile-name" style="color:${g.color}">${g.name}</div>
+            <div class="tile-count">${count} quotes</div>
+        </div>`;
+    }).join('');
+}
+
+// ─────────────────────────────────────────────
+//  FAVORITES VIEW
+// ─────────────────────────────────────────────
+function renderFavs() {
+    const el = document.getElementById('fav-list');
+    if (!favs.length) {
+        el.innerHTML = `<div class="empty">
+            <div class="empty-ico">🤍</div>
+            <p>No saved quotes yet.<br>Tap the heart on any card to save it here.</p>
+        </div>`;
+        return;
+    }
+    el.innerHTML = favs.map(q => `
+        <div class="fav-item" id="fi-${q.id}">
+            <div class="fav-q">"${q.q}"</div>
+            <div class="fav-foot">
+                <div class="fav-meta"><strong>${q.book}</strong> — ${q.by}</div>
+                <button class="fav-del" onclick="delFav(${q.id})" title="Remove">✕</button>
+            </div>
+        </div>`
+    ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function setGenre(g) {
+    activeGenre = g;
+    renderChips();
+    renderFeed();
+}
+
+function pickGenre(g) {
+    activeGenre = g;
+    renderChips();
+    renderFeed();
+    goView('feed');
+}
+
+function toggleFav(id, btn) {
+    const q = QUOTES.find(x => x.id === id);
+    const idx = favs.findIndex(f => f.id === id);
+    if (idx === -1) {
+        favs.push(q);
+        btn.innerHTML = '❤️';
+        btn.classList.add('on');
+        btn.classList.add('pop');
+        setTimeout(() => btn.classList.remove('pop'), 400);
+        toast('Saved to favorites!');
+    } else {
+        favs.splice(idx, 1);
+        btn.innerHTML = '🤍';
+        btn.classList.remove('on');
+        toast('Removed from saved');
+    }
+    save();
+    updateBadge();
+}
+
+function delFav(id) {
+    favs = favs.filter(f => f.id !== id);
+    // sync feed heart
+    const btn = document.querySelector(`.heart-btn[data-id="${id}"]`);
+    if (btn) { btn.innerHTML = '🤍'; btn.classList.remove('on'); }
+    save();
+    updateBadge();
+    renderFavs();
+}
+
+function goView(v) {
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('on'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('on'));
+    document.getElementById(`v-${v}`).classList.add('on');
+    document.querySelector(`[data-v="${v}"]`).classList.add('on');
+    document.getElementById('topbar').style.display = v === 'feed' ? '' : 'none';
+    if (v === 'favorites') renderFavs();
+    if (v === 'genres')    renderGenres();
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function genreName(id) {
+    const g = GENRES.find(x => x.id === id);
+    return g ? g.name : id;
+}
+
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function save() {
+    localStorage.setItem('qs_favs', JSON.stringify(favs));
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function updateBadge() {
+    const badge = document.getElementById('fav-badge');
+    const ico   = document.getElementById('fav-ico');
+    if (favs.length) {
+        badge.textContent = favs.length;
+        badge.style.display = 'flex';
+        ico.textContent = '♥';
+    } else {
+        badge.style.display = 'none';
+        ico.textContent = '♡';
+    }
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderChips();
+renderFeed();
+updateBadge();
+</script>
+</body>
+</html>
