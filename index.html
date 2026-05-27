@@ -13,7 +13,8 @@
             --text: #f0f0f8;
             --text-muted: #7070a0;
             --nav-h: 68px;
-            --top-h: 124px;
+            --top-h: 150px;
+            --learn-top-h: 110px;
         }
 
         body {
@@ -432,13 +433,25 @@
         }
 
         /* ── LEARN VIEW ── */
-        .learn-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: var(--bg);
-            padding: 14px 14px 0;
-            margin: 0 -14px;
+        #learn-topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 14px 16px 0;
+            background: linear-gradient(to bottom, rgba(8,8,16,1) 70%, transparent);
+            display: none;
+        }
+        #learn-topbar.visible { display: block; }
+
+        #learn-topbar-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #4ade80, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            line-height: 1;
         }
 
         #learn-filter {
@@ -451,11 +464,11 @@
         #learn-filter::-webkit-scrollbar { display: none; }
 
         #v-learn {
-            padding-top: 0;
+            padding-top: var(--learn-top-h);
         }
 
         #learn-list {
-            padding: 10px 0 0;
+            padding: 4px 0 0;
         }
 
         .learn-card {
@@ -568,12 +581,14 @@
     <div id="fav-list"></div>
 </div>
 
+<!-- LEARN TOP BAR (fixed, shown when on learn tab) -->
+<div id="learn-topbar">
+    <div id="learn-topbar-title">Learn</div>
+    <div id="learn-filter"></div>
+</div>
+
 <!-- VIEW: LEARN -->
 <div id="v-learn" class="view">
-    <div class="learn-topbar">
-        <div class="view-head" style="margin-bottom:10px">Learn</div>
-        <div id="learn-filter"></div>
-    </div>
     <div id="learn-list"></div>
 </div>
 
@@ -1157,6 +1172,7 @@ function goView(v) {
     document.getElementById(`v-${v}`).classList.add('on');
     document.querySelector(`[data-v="${v}"]`).classList.add('on');
     document.getElementById('topbar').style.display = v === 'feed' ? '' : 'none';
+    document.getElementById('learn-topbar').classList.toggle('visible', v === 'learn');
     if (v === 'favorites') renderFavs();
     if (v === 'genres')    renderGenres();
     if (v === 'learn')   { renderLearnFilter(); renderLearnCards(); }
