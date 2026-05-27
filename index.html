@@ -1092,7 +1092,64 @@ function initRevealObserver() {
             }
         });
     }, { threshold: 0.6 });
-    document.querySelectorAll('#feed .q-card').forEach(card => revealObserver.observe(card));
+    document.querySelectorAll('#feed .q-card').forEach(card => {
+        card.setAttribute('data-observed', '1');
+        revealObserver.observe(card);
+    });
+}
+
+// ─────────────────────────────────────────────
+//  INFINITE SCROLL
+// ─────────────────────────────────────────────
+function appendMoreCards() {
+    const feed = document.getElementById('feed');
+    const pool = activeGenre === 'all' ? QUOTES : QUOTES.filter(q => q.g === activeGenre);
+    const batch = shuffle([...pool]);
+
+    const frag = document.createDocumentFragment();
+    batch.forEach(q => {
+        const saved = favs.some(f => f.id === q.id);
+        const long  = q.q.length > 160;
+        const words = (q.q + '"').split(' ').map((w, i) =>
+            `<span class="word" style="animation-delay:${0.2 + i * 0.045}s">${w} </span>`
+        ).join('');
+        const div = document.createElement('div');
+        div.className = `q-card g-${q.g}`;
+        div.innerHTML = `
+            <div class="card-top">
+                <span class="gbadge">${genreName(q.g)}</span>
+                <button class="heart-btn ${saved ? 'on' : ''}" data-id="${q.id}" onclick="toggleFav(${q.id}, this)">
+                    ${saved ? '❤️' : '🤍'}
+                </button>
+            </div>
+            <div class="card-body">
+                <span class="qmark-wrap qmark">"</span>
+                <p class="qtext ${long ? 'sm' : ''}">${words}</p>
+            </div>
+            <div class="card-foot" style="animation-delay:${0.2 + (q.q.split(' ').length * 0.045) + 0.15}s">
+                <div class="book-title">${q.book}</div>
+                <div class="book-author">— ${q.by}</div>
+            </div>`;
+        frag.appendChild(div);
+    });
+    feed.appendChild(frag);
+
+    // Observe the new cards
+    feed.querySelectorAll('.q-card:not([data-observed])').forEach(card => {
+        card.setAttribute('data-observed', '1');
+        revealObserver && revealObserver.observe(card);
+    });
+}
+
+function initInfiniteScroll() {
+    const feed = document.getElementById('feed');
+    feed.addEventListener('scroll', () => {
+        const cards = feed.querySelectorAll('.q-card');
+        if (!cards.length) return;
+        const cardH  = cards[0].offsetHeight + 10; // card + margin
+        const index  = Math.round(feed.scrollTop / cardH);
+        if (index >= cards.length - 4) appendMoreCards();
+    }, { passive: true });
 }
 
 // ─────────────────────────────────────────────
@@ -1101,6 +1158,7 @@ function initRevealObserver() {
 renderChips();
 renderFeed();
 updateBadge();
+initInfiniteScroll();
 </script>
 </body>
 </html>
